@@ -1,0 +1,5 @@
+	<tool>
+		<key>pollsMan</key>
+		<scope>application</scope>
+		<class>com.eng.dotcms.polls.velocity.PollsViewTool</class>
+	</tool>

@@ -1,0 +1,25 @@
+#macro (viewPoll $title)
+			<script type='text/javascript' src='/dwr/engine.js'></script>
+			<script type='text/javascript' src='/dwr/interface/PollsManAjax.js'></script>			
+			<script type="text/javascript">
+				function vote(title) {
+					PollsManAjax.sayHello(title);
+				}
+			
+			</script>
+			#set($poll = $pollsMan.getPollByTitle($title))
+			#set($choices = $poll.getChoices())
+			
+			#if(null!=$poll)
+			<span>$poll.getQuestion()</span>
+			<br />						
+			#foreach($choice in $choices)
+				<input type="radio" name="vote" value="$choice.getIdentifier()" />&nbsp;$choice.getText()<br />
+			#end
+			<input type="button" value="Vote" onclick="vote('$title')" />
+			#else
+				<div>
+					This Poll does not exists or it has expired.
+				</div>
+			#end	
+#end

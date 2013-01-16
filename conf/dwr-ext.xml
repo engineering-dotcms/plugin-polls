@@ -1,0 +1,3 @@
+<create creator="new" javascript="PollsManAjax" scope="application">
+	<param name="class" value="com.eng.dotcms.polls.ajax.PollsManAjax"/>
+</create>

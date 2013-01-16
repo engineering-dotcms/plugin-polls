@@ -1,0 +1,16 @@
+	<portlet>
+		<portlet-name>EXT_POLLS_MANAGEMENT</portlet-name>
+		<display-name>Polls Management</display-name>
+		<portlet-class>com.liferay.portlet.JSPPortlet</portlet-class>
+		<init-param>
+			<name>view-jsp</name>
+			<value>/plugins/com.eng.dotcms.polls/view_polls_management.jsp</value>
+		</init-param>
+		<expiration-cache>0</expiration-cache>
+		<supports>
+			<mime-type>text/html</mime-type>
+		</supports>
+		<security-role-ref>
+			<role-name>CMS Administrator</role-name>
+		</security-role-ref>	
+	</portlet>	
