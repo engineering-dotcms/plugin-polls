@@ -87,6 +87,28 @@ function goToAddPoll(){
     dojo.style(dialog.domNode,'top','80px');
 }
 
+function goToViewPollVotes(pollId){
+	var dialog = new dijit.Dialog({
+		id: 'viewPollVotes',
+        title: "<%= LanguageUtil.get(pageContext, "view-poll-votes")%>",
+        style: "width: 800px; ",
+        content: new dojox.layout.ContentPane({
+            href: "/html/plugins/com.eng.dotcms.polls/view_poll_votes.jsp?pollId="+pollId
+        }),
+        onHide: function() {
+        	var dialog=this;
+        	setTimeout(function() {
+        		dialog.destroyRecursive();
+        	},200);
+        },
+        onLoad: function() {
+        	
+        }
+    });
+    dialog.show();	    
+    dojo.style(dialog.domNode,'top','80px');
+}
+
 function backToPollsList(id, reload){
 	dijit.byId(id).hide();
 	if(reload)
@@ -105,6 +127,7 @@ function loadTable() {
 		handleAs: 'json',
 		load: function(data) {
 			for(var i=0;i<data.list.length;i++) {
+				var identifier=data.list[i].identifier;
 				var title=data.list[i].title;
 				var question=data.list[i].question;
 				var moduser=data.list[i].user;
@@ -114,18 +137,20 @@ function loadTable() {
 				if(expired=="true"){
 					var row="<tr class=\"expiredPoll\">"+
 					  "<td style=\"width: 5%\"><strong><%=LanguageUtil.get(pageContext, "Expired")%></strong></td>"+	
-					  "<td style=\"width: 20%\">"+title+"</td>"+
+					  "<td style=\"width: 15%\">"+title+"</td>"+
 			          "<td style=\"width: 55%\">"+question+"</td>"+
 			          "<td style=\"width: 10%\">"+moduser+"</td>"+
-			          "<td style=\"width: 10%\">"+moddate+"</td>"+
+			          "<td style=\"width: 13%\">"+moddate+"</td>"+
+			          "<td style=\"width: 2%\"><a style=\"cursor: pointer\" onclick=\"goToViewPollVotes('"+identifier+"')\" title=\"<%=LanguageUtil.get(pageContext,"view-poll-votes")%>\"><span class='previewIcon'></span></a></td>"+
 			         "</tr>";					
 				}else{
 					var row="<tr>"+ 
 					  "<td style=\"width: 5%\"></td>"+
-			          "<td style=\"width: 20%\">"+title+"</td>"+
+			          "<td style=\"width: 15%\">"+title+"</td>"+
 			          "<td style=\"width: 55%\">"+question+"</td>"+
 			          "<td style=\"width: 10%\">"+moduser+"</td>"+
-			          "<td style=\"width: 10%\">"+moddate+"</td>"+
+			          "<td style=\"width: 13%\">"+moddate+"</td>"+
+			          "<td style=\"width: 2%\"><a style=\"cursor: pointer\" onclick=\"goToViewPollVotes('"+identifier+"')\" title=\"<%=LanguageUtil.get(pageContext,"view-poll-votes")%>\"><span class='previewIcon'></span></a></td>"+
 			         "</tr>";					
 				}
 				dojo.place(dojo.toDom(row),'table_body');				
@@ -180,10 +205,11 @@ dojo.ready(function(){
                 <thead>
                     <tr>
                     	<th style="width: 5%">Status</th>
-                        <th style="width: 20%">Title</th>
+                        <th style="width: 15%">Title</th>
                         <th style="width: 55%">Question</th>
                         <th style="width: 10%">Mod User</th>                         
-                        <th style="width: 10%">Mod Date</th>                       
+                        <th style="width: 13%">Mod Date</th>
+                        <th style="width: 2%">Action</th>                       
                     </tr>
                 </thead>
                 <tbody id="table_body">

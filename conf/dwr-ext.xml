@@ -1,3 +1,5 @@
 <create creator="new" javascript="PollsManAjax" scope="application">
 	<param name="class" value="com.eng.dotcms.polls.ajax.PollsManAjax"/>
 </create>
+
+<convert converter="bean" match="com.eng.dotcms.polls.ajax.PollsManAjax$VoteResult"/>

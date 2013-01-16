@@ -1,11 +1,15 @@
 package com.eng.dotcms.polls.util;
 
+import java.text.NumberFormat;
 import java.util.List;
 
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.cache.FieldsCache;
 import com.dotmarketing.cache.StructureCache;
+import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotHibernateException;
+import com.dotmarketing.exception.DotSecurityException;
+import com.dotmarketing.portlets.contentlet.model.Contentlet;
 import com.dotmarketing.portlets.structure.factories.FieldFactory;
 import com.dotmarketing.portlets.structure.factories.RelationshipFactory;
 import com.dotmarketing.portlets.structure.factories.StructureFactory;
@@ -18,6 +22,8 @@ import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.RegEX;
 import com.dotmarketing.util.VelocityUtil;
 import com.eng.dotcms.polls.PollsDeployer;
+import com.eng.dotcms.polls.PollsManAPI;
+import com.eng.dotcms.polls.PollsManFactory;
 
 public class PollsUtil {
 	
@@ -122,6 +128,63 @@ public class PollsUtil {
 			}
 		}
 		return null;
+	}
+	
+	public static String getVotesHtmlCode(String pollIdentifier, long languageId) throws DotDataException, DotSecurityException{
+		PollsManAPI pollsAPI = PollsManFactory.getPollsManAPI(); 
+		StringBuilder htmlCodeBuilder = new StringBuilder();
+		NumberFormat numberFormat = NumberFormat.getNumberInstance();
+		NumberFormat percentFormat = NumberFormat.getPercentInstance();
+		int totalVotes = pollsAPI.getTotalPollVotes(pollIdentifier);
+		List<Contentlet> choices = pollsAPI.getChoiceByPoll(pollIdentifier, languageId); 
+		htmlCodeBuilder.append("<div id='result" + pollIdentifier + "'>");
+		htmlCodeBuilder.append("<table class='poll-result-table'>");
+		htmlCodeBuilder.append("<thead>");
+		htmlCodeBuilder.append("<tr>");
+		htmlCodeBuilder.append("<th>");
+		htmlCodeBuilder.append("Choice");
+		htmlCodeBuilder.append("</th>");
+		htmlCodeBuilder.append("<th>");
+		htmlCodeBuilder.append("# Votes");
+		htmlCodeBuilder.append("</th>");
+		htmlCodeBuilder.append("<th>");
+		htmlCodeBuilder.append("Percentage");
+		htmlCodeBuilder.append("</th>");
+		htmlCodeBuilder.append("</thead>");
+		htmlCodeBuilder.append("<tbody>");
+		for(Contentlet choice : choices){
+			int choiceVotes = pollsAPI.getChoiceVotes(pollIdentifier, choice.getIdentifier());
+			double votesPercent = 0.0;
+			if (totalVotes > 0) {
+				votesPercent = (double) choiceVotes / totalVotes;
+			}
+			htmlCodeBuilder.append("<tr>");
+			htmlCodeBuilder.append("<td class=\"poll-choice\">");
+			htmlCodeBuilder.append(choice.get("text").toString());
+			htmlCodeBuilder.append("</td>");
+			htmlCodeBuilder.append("<td class=\"poll-votes\">");
+			htmlCodeBuilder.append(numberFormat.format(choiceVotes));
+			htmlCodeBuilder.append("</td>");
+			htmlCodeBuilder.append("<td class=\"poll-percents\">");
+			htmlCodeBuilder.append(percentFormat.format(votesPercent));
+			htmlCodeBuilder.append("</td>");			
+			htmlCodeBuilder.append("</tr>");			
+			i++;
+		}
+		htmlCodeBuilder.append("<tr>");
+		htmlCodeBuilder.append("<td colspan=\"3\" class=\"poll-responses\">");
+		if(totalVotes ==0){
+			htmlCodeBuilder.append("No responses");
+		} else{
+			htmlCodeBuilder.append("Total: " + totalVotes + " responses");
+		}			
+		htmlCodeBuilder.append("</td>");
+		htmlCodeBuilder.append("</tr>");
+		htmlCodeBuilder.append("</tbody>");
+		htmlCodeBuilder.append("</table>");
+		htmlCodeBuilder.append("</div>");
+		
+		return htmlCodeBuilder.toString();
 	}
 	
 }

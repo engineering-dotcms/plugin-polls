@@ -1,25 +1,67 @@
-#macro (viewPoll $title)
+#macro (viewPoll $title $showVotes)
+
 			<script type='text/javascript' src='/dwr/engine.js'></script>
 			<script type='text/javascript' src='/dwr/interface/PollsManAjax.js'></script>			
 			<script type="text/javascript">
-				function vote(title) {
-					PollsManAjax.sayHello(title);
+				var choice_identifier;
+
+				function updateChoiceIdentifier(id) {
+					var choice = document.getElementById(id);
+					choice_identifier = choice.value;
 				}
 			
+				function goToVote(pollIdentifier) {
+					document.getElementById("answers").innerHTML = "Loading...";  
+					PollsManAjax.vote('$title',pollIdentifier,choice_identifier,$showVotes,
+						function(data) {
+							var htmlCode = data.htmlCode;
+							document.getElementById("answers").innerHTML = htmlCode;
+						}
+					);
+				}
 			</script>
+			<style type="text/css">
+				#answers {
+					margin: 5px 0 5px 0;
+				}
+			</style>			
 			#set($poll = $pollsMan.getPollByTitle($title))
 			#set($choices = $poll.getChoices())
+			#set($prefix = "_voted")
+			#set($sessionAttr = "$title$prefix")
 			
-			#if(null!=$poll)
-			<span>$poll.getQuestion()</span>
-			<br />						
-			#foreach($choice in $choices)
-				<input type="radio" name="vote" value="$choice.getIdentifier()" />&nbsp;$choice.getText()<br />
-			#end
-			<input type="button" value="Vote" onclick="vote('$title')" />
+			#if(!$poll.isExpired())
+				<span>$poll.getQuestion()</span>
+				<br />										
+				#foreach($choice in $choices)					
+					<input type="radio" name="vote" id="$choice.getIdentifier()" value="$choice.getIdentifier()" onclick="updateChoiceIdentifier(this.id)"/>&nbsp;$choice.getText()<br />
+				#end
+				#if(!$UtilMethods.isSet($request.session.getAttribute($sessionAttr)))	
+					<input type="button" value="Vote" onclick="javascript: goToVote('$poll.getIdentifier()')" />
+				#else
+					<div>$text.get('You-have-already-voted-on-this-poll').</div>						
+				#end	
 			#else
 				<div>
-					This Poll does not exists or it has expired.
+					$text.get('This-poll-does-not-exists-or-it-has-expired').
 				</div>
-			#end	
+			#end
+			<div id="answers">
+				#if($UtilMethods.isSet($request.session.getAttribute($sessionAttr)) && $showVotes)
+					#set($htmlCode = $pollsMan.getVotesHtmlCode($poll.getIdentifier(),$request.session.getAttribute("com.dotmarketing.htmlpage.language")))
+					$htmlCode
+				#end
+			</div>
+#end
+
+#macro (viewPollVotes $title)
+	<script type='text/javascript' src='/dwr/engine.js'></script>
+	<script type='text/javascript' src='/dwr/interface/PollsManAjax.js'></script>
+	
+	#set($poll = $pollsMan.getPollByTitle($title))	
+	#set($htmlCode = $pollsMan.getVotesHtmlCode($poll.getIdentifier(),$request.session.getAttribute("com.dotmarketing.htmlpage.language")))
+	
+	<div>
+		$htmlCode
+	</div>
 #end

@@ -64,6 +64,7 @@ public class PollsAjaxAction extends AjaxAction {
                 User modUser=APILocator.getUserAPI().loadUserById(poll.getModUser());                
                 Map<String,String> mm=new HashMap<String,String>();
                 mm.put("inode", poll.getInode());
+                mm.put("identifier", poll.getIdentifier());
                 mm.put("title", poll.getTitle());
                 mm.put("question", (String)poll.getMap().get("question"));
                 mm.put("date", df.format(poll.getModDate()));

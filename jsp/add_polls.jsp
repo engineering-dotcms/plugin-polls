@@ -75,7 +75,7 @@
 					<%= LanguageUtil.get(pageContext, "Question") %>:
 				</td>
 				<td>						          	
-					<textarea dojoType="dijit.form.SimpleTextarea" name="pollQuestion" id="pollQuestion" style="width:400px;height:105px;"></textarea>
+					<textarea dojoType="dijit.form.SimpleTextarea" name="pollQuestion" id="pollQuestion" style="width:400px;height:190px;"></textarea>
 				</td>		
 			</tr>	
 			<tr>
@@ -102,7 +102,7 @@
 					<%= LanguageUtil.get(pageContext, "choice-text") %>:
 				</td>
 				<td>						          	
-					<textarea dojoType="dijit.form.SimpleTextarea" name="pollChoice" id="pollChoice" style="width:400px;height:190px;"></textarea>
+					<textarea dojoType="dijit.form.SimpleTextarea" name="pollChoice" id="pollChoice" style="width:400px;height:105px;"></textarea>
 				</td>		
 			</tr>
 		</table>
