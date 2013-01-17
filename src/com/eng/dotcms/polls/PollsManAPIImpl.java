@@ -18,6 +18,7 @@ import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.VelocityUtil;
 import com.eng.dotcms.polls.util.PollsUtil;
 import com.liferay.portal.model.User;
+import static com.eng.dotcms.polls.util.PollsConstants.*;
 
 public class PollsManAPIImpl implements PollsManAPI {
 
@@ -29,7 +30,7 @@ public class PollsManAPIImpl implements PollsManAPI {
 	public PollsManAPIImpl(){		
 		try {
 			conAPI = APILocator.getContentletAPI();
-			pollVote = StructureCache.getStructureByVelocityVarName(VelocityUtil.convertToVelocityVariable("PollVote", true));
+			pollVote = StructureCache.getStructureByVelocityVarName(VelocityUtil.convertToVelocityVariable(VOTE_STRUCTURE_NAME, true));
 			structurePermissions = APILocator.getPermissionAPI().getPermissions(pollVote);
 			categories = APILocator.getCategoryAPI().findTopLevelCategories( APILocator.getUserAPI().getSystemUser(), false );
 		} catch (DotDataException e) {
@@ -80,7 +81,7 @@ public class PollsManAPIImpl implements PollsManAPI {
 	@Override
 	public List<Contentlet> getChoiceByPoll(String pollIdentifier, long languageId) throws DotDataException, DotSecurityException {
 		Contentlet poll = conAPI.findContentletByIdentifier(pollIdentifier, true, languageId, APILocator.getUserAPI().getSystemUser(), true);		
-		return conAPI.getRelatedContent(poll, PollsUtil.getRelationshipByParentAndName(poll.getStructure(), "Parent_Poll-Child_PollChoice"), APILocator.getUserAPI().getSystemUser(), true);
+		return conAPI.getRelatedContent(poll, PollsUtil.getRelationshipByParentAndName(poll.getStructure(), RELATIONSHIP_NAME), APILocator.getUserAPI().getSystemUser(), true);
 	}
 
 	@Override

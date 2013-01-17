@@ -169,7 +169,6 @@ public class PollsUtil {
 			htmlCodeBuilder.append(percentFormat.format(votesPercent));
 			htmlCodeBuilder.append("</td>");			
 			htmlCodeBuilder.append("</tr>");			
-			i++;
 		}
 		htmlCodeBuilder.append("<tr>");
 		htmlCodeBuilder.append("<td colspan=\"3\" class=\"poll-responses\">");

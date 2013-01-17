@@ -1,14 +1,17 @@
 package com.eng.dotcms.polls;
 
+import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
 
 import org.quartz.CronTrigger;
+import org.quartz.SchedulerException;
 
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.CacheLocator;
 import com.dotmarketing.cache.StructureCache;
 import com.dotmarketing.cms.content.submit.PluginDeployer;
+import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.plugin.business.PluginAPI;
 import com.dotmarketing.portlets.structure.factories.RelationshipFactory;
 import com.dotmarketing.portlets.structure.model.Field.DataType;
@@ -18,7 +21,9 @@ import com.dotmarketing.portlets.structure.model.Structure;
 import com.dotmarketing.quartz.CronScheduledTask;
 import com.dotmarketing.quartz.QuartzUtils;
 import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.VelocityUtil;
 import com.eng.dotcms.polls.util.PollsUtil;
+import static com.eng.dotcms.polls.util.PollsConstants.*;
 
 /**
  * This class create, if setted and if there aren't, all the structures and the relationship that we need for make it works.
@@ -29,21 +34,13 @@ import com.eng.dotcms.polls.util.PollsUtil;
  * Jan 14, 2013 - 2:43:56 PM
  */
 public class PollsDeployer extends PluginDeployer {
-	
-	private static String POLL_STRUCTURE_NAME = "Poll";
-	private static String CHOICE_STRUCTURE_NAME = "PollChoice";
-	private static String VOTE_STRUCTURE_NAME = "PollVote";
-	private static String RELATIONSHIP_NAME = "Parent_Poll-Child_PollChoice";
-	private static String PLUGIN_ID = "com.eng.dotcms.polls";
-	private static String AUTO_CREATE_STRUCTURES = "polls.autoCreateStructures";
-	
+		
 	private PluginAPI pluginAPI = APILocator.getPluginAPI();
 	
-	@SuppressWarnings("deprecation")
 	@Override
 	public boolean deploy() {
 		try {
-			if(Boolean.valueOf(pluginAPI.loadProperty(PLUGIN_ID, AUTO_CREATE_STRUCTURES))){
+			if(Boolean.valueOf(pluginAPI.loadProperty(PLUGIN_ID, PROP_AUTO_CREATE_STRUCTURES))){
 				// create Poll Structure
 				if(!PollsUtil.existStructure(POLL_STRUCTURE_NAME)) {
 					Logger.info(PollsDeployer.class, "The Structure Polls must be created");
@@ -71,13 +68,13 @@ public class PollsDeployer extends PluginDeployer {
 					PollsUtil.createField(pollVoteStructure.getInode(), "Choice", FieldType.TEXT, DataType.TEXT, true, true, false, true);
 					PollsUtil.createField(pollVoteStructure.getInode(), "User", FieldType.TEXT, DataType.TEXT, true, false, false, true);
 				}
-				if(!PollsUtil.existRelationship(RELATIONSHIP_NAME, StructureCache.getStructureByName(POLL_STRUCTURE_NAME))){
+				if(!PollsUtil.existRelationship(RELATIONSHIP_NAME, StructureCache.getStructureByVelocityVarName(VelocityUtil.convertToVelocityVariable(POLL_STRUCTURE_NAME, true)))){
 					Logger.info(PollsDeployer.class, "The Relationship must be created");
 					Relationship relationshipPollPollChoice = new Relationship();
-					relationshipPollPollChoice.setParentStructureInode(StructureCache.getStructureByName(POLL_STRUCTURE_NAME).getInode());
+					relationshipPollPollChoice.setParentStructureInode(StructureCache.getStructureByVelocityVarName(VelocityUtil.convertToVelocityVariable(POLL_STRUCTURE_NAME, true)).getInode());
 					relationshipPollPollChoice.setParentRelationName("Parent "+POLL_STRUCTURE_NAME);
 					relationshipPollPollChoice.setParentRequired(false);
-					relationshipPollPollChoice.setChildStructureInode(StructureCache.getStructureByName(CHOICE_STRUCTURE_NAME).getInode());
+					relationshipPollPollChoice.setChildStructureInode(StructureCache.getStructureByVelocityVarName(VelocityUtil.convertToVelocityVariable(CHOICE_STRUCTURE_NAME, true)).getInode());
 					relationshipPollPollChoice.setChildRelationName("Child "+CHOICE_STRUCTURE_NAME);
 					relationshipPollPollChoice.setChildRequired(false);
 					relationshipPollPollChoice.setCardinality(0);
@@ -86,14 +83,10 @@ public class PollsDeployer extends PluginDeployer {
 				}
 				
 			}
-			//scheduled job
-			String jobName = pluginAPI.loadProperty(PLUGIN_ID, "quartz.job.name");
-			String jobGroup = pluginAPI.loadProperty(PLUGIN_ID, "quartz.job.group");
-			String jobDescription = pluginAPI.loadProperty(PLUGIN_ID, "quartz.job.description");
-			String javaClassname = pluginAPI.loadProperty(PLUGIN_ID, "quartz.job.java.classname");
-			String cronExpression = pluginAPI.loadProperty(PLUGIN_ID, "quartz.job.cron.expression");
-			CronScheduledTask cronScheduledTask = new CronScheduledTask(jobName, jobGroup, jobDescription, javaClassname, new Date(), null, CronTrigger.MISFIRE_INSTRUCTION_FIRE_ONCE_NOW, new HashMap<String, Object>(), cronExpression);
-			QuartzUtils.scheduleTask(cronScheduledTask);
+			
+			// scheduled all the configured jobs.
+			scheduleJobs();
+			
 			CacheLocator.getCacheAdministrator().flushAll();
 			return true;
 		}catch(Exception e){
@@ -101,6 +94,18 @@ public class PollsDeployer extends PluginDeployer {
 			CacheLocator.getCacheAdministrator().flushAll();
 			return false;
 		}
+	}
+	
+	private void scheduleJobs() throws SchedulerException, ParseException, ClassNotFoundException, DotDataException {
+				
+		//scheduled expired job
+		String jobName = pluginAPI.loadProperty(PLUGIN_ID, PROP_EXPIRED_JOB_NAME);
+		String jobGroup = pluginAPI.loadProperty(PLUGIN_ID, PROP_POLLS_JOB_GROUP);
+		String jobDescription = pluginAPI.loadProperty(PLUGIN_ID, PROP_EXPIRED_JOB_DESCRIPTION);
+		String javaClassname = pluginAPI.loadProperty(PLUGIN_ID, PROP_EXPIRED_JOB_CLASS);
+		String cronExpression = pluginAPI.loadProperty(PLUGIN_ID, PROP_EXPIRED_JOB_CRON_EXP);
+		CronScheduledTask cronScheduledTask = new CronScheduledTask(jobName, jobGroup, jobDescription, javaClassname, new Date(), null, CronTrigger.MISFIRE_INSTRUCTION_FIRE_ONCE_NOW, new HashMap<String, Object>(), cronExpression);
+		QuartzUtils.scheduleTask(cronScheduledTask);
 	}
 	
 }
