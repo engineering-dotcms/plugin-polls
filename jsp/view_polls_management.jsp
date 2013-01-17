@@ -204,12 +204,12 @@ dojo.ready(function(){
                 <table id="links_table" class="listingTable" border=1>
                 <thead>
                     <tr>
-                    	<th style="width: 5%">Status</th>
-                        <th style="width: 15%">Title</th>
-                        <th style="width: 55%">Question</th>
-                        <th style="width: 10%">Mod User</th>                         
-                        <th style="width: 13%">Mod Date</th>
-                        <th style="width: 2%">Action</th>                       
+                    	<th style="width: 5%"><%=LanguageUtil.get(pageContext, "Status")%></th>
+                        <th style="width: 15%"><%=LanguageUtil.get(pageContext, "Title")%></th>
+                        <th style="width: 55%"><%=LanguageUtil.get(pageContext, "Question")%></th>
+                        <th style="width: 10%"><%=LanguageUtil.get(pageContext, "Mod-User")%></th>                         
+                        <th style="width: 13%"><%=LanguageUtil.get(pageContext, "Mod-Data")%></th>
+                        <th style="width: 2%"><%=LanguageUtil.get(pageContext, "Action")%></th>                       
                     </tr>
                 </thead>
                 <tbody id="table_body">

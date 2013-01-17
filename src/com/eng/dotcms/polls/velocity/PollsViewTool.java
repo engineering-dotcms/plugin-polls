@@ -11,13 +11,12 @@ import com.dotmarketing.portlets.contentlet.model.Contentlet;
 import com.dotmarketing.util.Logger;
 import com.eng.dotcms.polls.util.PollsUtil;
 
-@SuppressWarnings("deprecation")
 public class PollsViewTool implements ViewTool {
 	
 	public Poll getPollByTitle(String title) throws DotDataException, DotSecurityException{
 		Poll result = new Poll();
 		List<PollChoice> choicesList = new ArrayList<PollChoice>();
-		List<Contentlet> polls = APILocator.getContentletAPI().findByStructure(StructureCache.getStructureByName("Poll"), APILocator.getUserAPI().getSystemUser() , false, 0, 0);
+		List<Contentlet> polls = APILocator.getContentletAPI().findByStructure(StructureCache.getStructureByVelocityVarName("Poll"), APILocator.getUserAPI().getSystemUser() , false, 0, 0);
 		for(Contentlet poll : polls){
 			String _title = (String)poll.getMap().get("title");
 			if(_title.equals(title)){

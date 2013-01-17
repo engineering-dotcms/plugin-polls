@@ -18,7 +18,6 @@ import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.portlets.categories.model.Category;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
 import com.dotmarketing.util.Logger;
-import com.dotmarketing.util.VelocityUtil;
 
 public class ExpiredPollsJob implements StatefulJob {
 
@@ -28,7 +27,7 @@ public class ExpiredPollsJob implements StatefulJob {
 		Logger.debug(this, "BEGIN: Check if some polls is expired...");
 		int count = 0;
 		try {
-			List<Contentlet> polls = APILocator.getContentletAPI().findByStructure(StructureCache.getStructureByVelocityVarName(VelocityUtil.convertToVelocityVariable(POLL_STRUCTURE_NAME, true)), APILocator.getUserAPI().getSystemUser() , false, 0, 0);
+			List<Contentlet> polls = APILocator.getContentletAPI().findByStructure(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME), APILocator.getUserAPI().getSystemUser() , false, 0, 0);
 			for(Contentlet poll : polls){
 				Date expirationDate  = (Date)poll.getMap().get("expiration_date");		
 				String expired = (String)poll.getMap().get("expired");
@@ -36,7 +35,7 @@ public class ExpiredPollsJob implements StatefulJob {
 					poll.setStringProperty("expired", "true");
 					poll.setInode("0");
 					List<Category> categories = APILocator.getCategoryAPI().findTopLevelCategories( APILocator.getUserAPI().getSystemUser(), false );
-					List<Permission> structurePermissions = APILocator.getPermissionAPI().getPermissions(StructureCache.getStructureByVelocityVarName(VelocityUtil.convertToVelocityVariable(POLL_STRUCTURE_NAME, true)));
+					List<Permission> structurePermissions = APILocator.getPermissionAPI().getPermissions(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME));
 					APILocator.getContentletAPI().validateContentlet( poll, categories );
 					poll = APILocator.getContentletAPI().checkin( poll, categories, structurePermissions, APILocator.getUserAPI().getSystemUser(), true );
 					APILocator.getContentletAPI().publish(poll, APILocator.getUserAPI().getSystemUser(), true);

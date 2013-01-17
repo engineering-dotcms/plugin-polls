@@ -1,7 +1,12 @@
 package com.eng.dotcms.polls.quartz.job;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.GregorianCalendar;
+import java.util.List;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -9,8 +14,16 @@ import org.quartz.StatefulJob;
 
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.UserAPI;
+import com.dotmarketing.cache.StructureCache;
+import com.dotmarketing.exception.DotDataException;
+import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.plugin.business.PluginAPI;
 import com.dotmarketing.portlets.contentlet.business.ContentletAPI;
+import com.dotmarketing.portlets.contentlet.model.Contentlet;
+import com.dotmarketing.util.Logger;
+import com.eng.dotcms.polls.quartz.job.util.PollsVotesFilenameFilter;
+
+import static com.eng.dotcms.polls.util.PollsConstants.*;
 
 /**
  * 
@@ -24,6 +37,7 @@ public class PutVotesIntoCSVJob implements StatefulJob {
 	private UserAPI userAPI;
 	private PluginAPI pluginAPI;
 	private SimpleDateFormat sdf;
+	private String _destinationFolder; 
 	
 	public PutVotesIntoCSVJob(){
 		conAPI = APILocator.getContentletAPI();
@@ -34,7 +48,134 @@ public class PutVotesIntoCSVJob implements StatefulJob {
 
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
-		File destinationFolder = new File(pathname)
+		FileOutputStream fos = null;
+		try {
+			Logger.info(this, "BEGIN: putting votes into CSV");			
+			
+			// load the destination folder and clean the content except the logFile.
+			Logger.debug(this, "1. Load the destination folder...");
+			_destinationFolder = pluginAPI.loadProperty(PLUGIN_ID, PROP_PUT_CSV_JOB_DEST_PATH);
+			File destinationFolder = getDestinationFolder(_destinationFolder);
+			Logger.debug(this, "1. ...destination folder load successful: " + _destinationFolder);
+						
+			// load all the votes
+			Logger.debug(this, "2. Load all the votes...");
+			List<Contentlet> votes = conAPI.findByStructure(StructureCache.getStructureByVelocityVarName(VOTE_STRUCTURE_NAME), userAPI.getSystemUser(), true, 0, 0);
+			Logger.debug(this, "2. ...number of votes: " + votes.size());
+			
+			if(votes.size()>0){
+				// lock the file: write in no append mode into the status file.
+				lock(destinationFolder);
+				
+				// open a stream on file
+				fos = new FileOutputStream(getDestinationFile(destinationFolder), true);
+				// write each one into the file
+				Logger.debug(this, "3. Write the single vote...");
+				int i = 0;
+				for(Contentlet vote:votes){
+					String line = getCSVFormatFromContentlet(vote).toString();
+					fos.write(line.getBytes());
+					if(i<votes.size()-1)
+						fos.write("\n".getBytes());
+					i++;
+				}
+				fos.flush();
+				Logger.debug(this, "3. Write successful.");
+				
+				// unlock
+				unlock(destinationFolder);
+			}
+			
+			Logger.info(this, "END: putting votes into CSV. Number of votes: " + votes.size());
+		} catch (DotDataException e) {
+			Logger.error(this, "Error", e);
+		} catch (DotSecurityException e) {
+			Logger.error(this, "Error", e);
+		} catch (FileNotFoundException e) {
+			Logger.error(this, "Error", e);
+		} catch (IOException e) {
+			Logger.error(this, "Error", e);
+		} finally {
+			try {
+				if(null!=fos)
+					fos.close();				
+			} catch (IOException e) {
+				Logger.error(this, "Error during the FileOutputStream close", e);
+			}
+		}
+		
 	}
-
-}
+	
+	private File getDestinationFolder(String pathname) throws DotDataException{
+		File destinationFolder = new File(pathname);
+		if(!destinationFolder.exists())
+			destinationFolder.mkdirs();
+		else
+			cleanFolder(destinationFolder);
+		return destinationFolder;
+	}
+	
+	private File getDestinationFile(File parent) throws IOException, DotDataException{
+		
+		File csv = new File(parent,pluginAPI.loadProperty(PLUGIN_ID, PROP_POLL_VOTES_FILENAME)+"_"+sdf.format(new GregorianCalendar().getTime())+".txt");
+		if(!csv.exists())
+			csv.createNewFile();
+		return csv;
+	}
+	
+	private File getStatusFile(File parent) throws IOException, DotDataException{
+		File csv = new File(parent,pluginAPI.loadProperty(PLUGIN_ID, PROP_POLL_STATUS_FILENAME));
+		if(!csv.exists())
+			csv.createNewFile();
+		return csv;
+	}
+	
+	private boolean cleanFolder(File destFolder) throws DotDataException{
+		boolean ret = true;
+		File[] files = destFolder.listFiles(new PollsVotesFilenameFilter(pluginAPI.loadProperty(PLUGIN_ID, PROP_POLL_VOTES_FILENAME)));
+		for(File f:files){
+			ret = f.delete();
+		}
+		return ret;
+	}
+	
+	private void lock(File destination) throws IOException, DotDataException {
+		FileOutputStream fos = null;
+		try{
+			fos = new FileOutputStream(getStatusFile(destination), false);
+			fos.write(pluginAPI.loadProperty(PLUGIN_ID, PROP_POLL_STATUS_BUSY).getBytes());
+			fos.flush();
+			fos.close();
+		}finally{
+			if(null!=fos)
+				fos.close();
+		}
+	}
+	
+	private void unlock(File destination) throws IOException, DotDataException{
+		FileOutputStream fos = null;
+		try{
+			fos = new FileOutputStream(getStatusFile(destination), false);
+			fos.write(pluginAPI.loadProperty(PLUGIN_ID, PROP_POLL_STATUS_FREE).getBytes());
+			fos.flush();
+			fos.close();
+		}finally{
+			if(null!=fos)
+				fos.close();
+		}
+	}
+	
+	private StringBuilder getCSVFormatFromContentlet(Contentlet vote){
+		StringBuilder csvVote = new StringBuilder();
+		csvVote.append(vote.getIdentifier());
+		csvVote.append("|");
+		csvVote.append(vote.getMap().get("poll").toString());
+		csvVote.append("|");
+		csvVote.append(vote.getMap().get("choice").toString());
+		csvVote.append("|");
+		csvVote.append(vote.getMap().get("user").toString());
+		return csvVote;				
+	}
+	
+	
+}	

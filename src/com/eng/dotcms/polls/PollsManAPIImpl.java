@@ -15,7 +15,6 @@ import com.dotmarketing.portlets.contentlet.business.DotContentletValidationExce
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
 import com.dotmarketing.portlets.structure.model.Structure;
 import com.dotmarketing.util.Logger;
-import com.dotmarketing.util.VelocityUtil;
 import com.eng.dotcms.polls.util.PollsUtil;
 import com.liferay.portal.model.User;
 import static com.eng.dotcms.polls.util.PollsConstants.*;
@@ -30,7 +29,7 @@ public class PollsManAPIImpl implements PollsManAPI {
 	public PollsManAPIImpl(){		
 		try {
 			conAPI = APILocator.getContentletAPI();
-			pollVote = StructureCache.getStructureByVelocityVarName(VelocityUtil.convertToVelocityVariable(VOTE_STRUCTURE_NAME, true));
+			pollVote = StructureCache.getStructureByVelocityVarName(VOTE_STRUCTURE_NAME);
 			structurePermissions = APILocator.getPermissionAPI().getPermissions(pollVote);
 			categories = APILocator.getCategoryAPI().findTopLevelCategories( APILocator.getUserAPI().getSystemUser(), false );
 		} catch (DotDataException e) {

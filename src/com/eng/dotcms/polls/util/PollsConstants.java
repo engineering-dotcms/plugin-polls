@@ -9,6 +9,10 @@ public class PollsConstants {
 	// global
 	public static final String PROP_AUTO_CREATE_STRUCTURES 					= 	"polls.autoCreateStructures";
 	public static final String PROP_POLLS_JOB_GROUP		 					= 	"quartz.job.group";
+	public static final String PROP_POLL_VOTES_FILENAME						=	"quartz.csv.filename";
+	public static final String PROP_POLL_STATUS_FILENAME					=	"quartz.csv.status.filename";
+	public static final String PROP_POLL_STATUS_BUSY						=	"quartz.csv.status.busy";
+	public static final String PROP_POLL_STATUS_FREE						=	"quartz.csv.status.free";
 	
 	
 	// scheduled jobs

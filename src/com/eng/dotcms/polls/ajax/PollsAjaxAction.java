@@ -24,7 +24,6 @@ import com.dotmarketing.portlets.categories.model.Category;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
 import com.dotmarketing.servlets.ajax.AjaxAction;
 import com.dotmarketing.util.Logger;
-import com.dotmarketing.util.VelocityUtil;
 import com.eng.dotcms.polls.util.PollsUtil;
 import com.liferay.portal.model.User;
 import static com.eng.dotcms.polls.util.PollsConstants.*;
@@ -61,7 +60,7 @@ public class PollsAjaxAction extends AjaxAction {
         List<Map> list=new ArrayList<Map>();
         SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd hh:mm");
         try {
-        	List<Contentlet> polls = APILocator.getContentletAPI().findByStructure(StructureCache.getStructureByVelocityVarName(VelocityUtil.convertToVelocityVariable(POLL_STRUCTURE_NAME, true)), WebAPILocator.getUserWebAPI().getLoggedInUser(request), false, pageSize, offset);
+        	List<Contentlet> polls = APILocator.getContentletAPI().findByStructure(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME), WebAPILocator.getUserWebAPI().getLoggedInUser(request), false, pageSize, offset);
             for(Contentlet poll : polls) {
                 User modUser=APILocator.getUserAPI().loadUserById(poll.getModUser());                
                 Map<String,String> mm=new HashMap<String,String>();
@@ -100,8 +99,8 @@ public class PollsAjaxAction extends AjaxAction {
 			if(expirationDate.after(gc.getTime())){
 				Contentlet poll = new Contentlet();
 				List<Category> categories = APILocator.getCategoryAPI().findTopLevelCategories( APILocator.getUserAPI().getSystemUser(), false );
-				List<Permission> structurePermissions = APILocator.getPermissionAPI().getPermissions(StructureCache.getStructureByVelocityVarName(VelocityUtil.convertToVelocityVariable(POLL_STRUCTURE_NAME, true)) );				
-				poll.setStructureInode(StructureCache.getStructureByVelocityVarName(VelocityUtil.convertToVelocityVariable(POLL_STRUCTURE_NAME, true)).getInode());
+				List<Permission> structurePermissions = APILocator.getPermissionAPI().getPermissions(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME));				
+				poll.setStructureInode(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME).getInode());
 				poll.setStringProperty("title", request.getParameter("pollTitle"));
 				poll.setStringProperty("question", request.getParameter("pollQuestion"));
 				poll.setDateProperty("expiration_date",expirationDate);
@@ -118,7 +117,7 @@ public class PollsAjaxAction extends AjaxAction {
 				List<Contentlet> contentSavedRelationships = new ArrayList<Contentlet>();
 				for(String c:choices){
 					Contentlet choice = new Contentlet();
-					choice.setStructureInode(StructureCache.getStructureByVelocityVarName(VelocityUtil.convertToVelocityVariable(CHOICE_STRUCTURE_NAME, true)).getInode());
+					choice.setStructureInode(StructureCache.getStructureByVelocityVarName(CHOICE_STRUCTURE_NAME).getInode());
 					choice.setStringProperty("id", UUID.randomUUID().toString());
 					choice.setStringProperty("text", c);
 					choice.setHost(WebAPILocator.getHostWebAPI().getCurrentHost(request).getIdentifier());
@@ -130,7 +129,7 @@ public class PollsAjaxAction extends AjaxAction {
 				}
 				
 				// save all choice
-				structurePermissions = APILocator.getPermissionAPI().getPermissions(StructureCache.getStructureByVelocityVarName(VelocityUtil.convertToVelocityVariable(CHOICE_STRUCTURE_NAME, true)));
+				structurePermissions = APILocator.getPermissionAPI().getPermissions(StructureCache.getStructureByVelocityVarName(CHOICE_STRUCTURE_NAME));
 				
 				for(Contentlet c : contentRelationships){
 					APILocator.getContentletAPI().validateContentlet( c, categories );
