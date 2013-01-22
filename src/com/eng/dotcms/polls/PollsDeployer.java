@@ -57,32 +57,29 @@ public class PollsDeployer extends PluginDeployer {
 					Structure pollChoiceStructure = PollsUtil.createStructure(CHOICE_STRUCTURE_NAME, CHOICE_STRUCTURE_NAME, APILocator.getHostAPI().findDefaultHost(APILocator.getUserAPI().getSystemUser(), true), Structure.STRUCTURE_TYPE_CONTENT);
 					PollsUtil.createField(pollChoiceStructure.getInode(), "Text", FieldType.TEXT, DataType.TEXT, true, true, false, true);
 					PollsUtil.createField(pollChoiceStructure.getInode(), "Id", FieldType.TEXT, DataType.TEXT, true, true, false, false);
-				}
-		
-				// create PollVote Structure
-				if(!PollsUtil.existStructure(VOTE_STRUCTURE_NAME)) {
-					Logger.info(PollsDeployer.class, "The Structure PollsVote must be created");
-					Structure pollVoteStructure = PollsUtil.createStructure(VOTE_STRUCTURE_NAME, VOTE_STRUCTURE_NAME, APILocator.getHostAPI().findDefaultHost(APILocator.getUserAPI().getSystemUser(), true), Structure.STRUCTURE_TYPE_CONTENT);
-					PollsUtil.createField(pollVoteStructure.getInode(), "Poll", FieldType.TEXT, DataType.TEXT, true, true, false, true);
-					PollsUtil.createField(pollVoteStructure.getInode(), "Choice", FieldType.TEXT, DataType.TEXT, true, true, false, true);
-					PollsUtil.createField(pollVoteStructure.getInode(), "User", FieldType.TEXT, DataType.TEXT, true, false, false, true);
-				}
-				if(!PollsUtil.existRelationship(RELATIONSHIP_NAME, StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME))){
-					Logger.info(PollsDeployer.class, "The Relationship must be created");
-					Relationship relationshipPollPollChoice = new Relationship();
-					relationshipPollPollChoice.setParentStructureInode(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME).getInode());
-					relationshipPollPollChoice.setParentRelationName("Parent "+POLL_STRUCTURE_NAME);
-					relationshipPollPollChoice.setParentRequired(false);
-					relationshipPollPollChoice.setChildStructureInode(StructureCache.getStructureByVelocityVarName(CHOICE_STRUCTURE_NAME).getInode());
-					relationshipPollPollChoice.setChildRelationName("Child "+CHOICE_STRUCTURE_NAME);
-					relationshipPollPollChoice.setChildRequired(false);
-					relationshipPollPollChoice.setCardinality(0);
-					relationshipPollPollChoice.setRelationTypeValue(RELATIONSHIP_NAME);
-					RelationshipFactory.saveRelationship(relationshipPollPollChoice);					
-				}
-				
+				}				
 			}
-			
+			// create PollVote Structure
+			if(!PollsUtil.existStructure(VOTE_STRUCTURE_NAME)) {
+				Logger.info(PollsDeployer.class, "The Structure PollsVote must be created");
+				Structure pollVoteStructure = PollsUtil.createStructure(VOTE_STRUCTURE_NAME, VOTE_STRUCTURE_NAME, APILocator.getHostAPI().findDefaultHost(APILocator.getUserAPI().getSystemUser(), true), Structure.STRUCTURE_TYPE_CONTENT);
+				PollsUtil.createField(pollVoteStructure.getInode(), "Poll", FieldType.TEXT, DataType.TEXT, true, true, false, true);
+				PollsUtil.createField(pollVoteStructure.getInode(), "Choice", FieldType.TEXT, DataType.TEXT, true, true, false, true);
+				PollsUtil.createField(pollVoteStructure.getInode(), "User", FieldType.TEXT, DataType.TEXT, true, false, false, true);
+			}
+			if(!PollsUtil.existRelationship(RELATIONSHIP_NAME, StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME))){
+				Logger.info(PollsDeployer.class, "The Relationship must be created");
+				Relationship relationshipPollPollChoice = new Relationship();
+				relationshipPollPollChoice.setParentStructureInode(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME).getInode());
+				relationshipPollPollChoice.setParentRelationName("Parent "+POLL_STRUCTURE_NAME);
+				relationshipPollPollChoice.setParentRequired(false);
+				relationshipPollPollChoice.setChildStructureInode(StructureCache.getStructureByVelocityVarName(CHOICE_STRUCTURE_NAME).getInode());
+				relationshipPollPollChoice.setChildRelationName("Child "+CHOICE_STRUCTURE_NAME);
+				relationshipPollPollChoice.setChildRequired(false);
+				relationshipPollPollChoice.setCardinality(0);
+				relationshipPollPollChoice.setRelationTypeValue(RELATIONSHIP_NAME);
+				RelationshipFactory.saveRelationship(relationshipPollPollChoice);					
+			}			
 			// scheduled all the configured jobs.
 			scheduleJobs();
 			
@@ -114,8 +111,7 @@ public class PollsDeployer extends PluginDeployer {
 			String javaPutClassname = pluginAPI.loadProperty(PLUGIN_ID, PROP_PUT_CSV_JOB_CLASS);
 			String cronPutExpression = pluginAPI.loadProperty(PLUGIN_ID, PROP_PUT_CSV_JOB_CRON_EXP);
 			CronScheduledTask cronPutScheduledTask = new CronScheduledTask(jobPutName, jobPutGroup, jobPutDescription, javaPutClassname, new Date(), null, CronTrigger.MISFIRE_INSTRUCTION_FIRE_ONCE_NOW, new HashMap<String, Object>(), cronPutExpression);
-			QuartzUtils.scheduleTask(cronPutScheduledTask);
-			
+			QuartzUtils.scheduleTask(cronPutScheduledTask);			
 		}
 		
 		//scheduled get csv job (if enable)

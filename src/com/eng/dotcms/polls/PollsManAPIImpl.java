@@ -13,6 +13,7 @@ import com.dotmarketing.portlets.contentlet.business.ContentletAPI;
 import com.dotmarketing.portlets.contentlet.business.DotContentletStateException;
 import com.dotmarketing.portlets.contentlet.business.DotContentletValidationException;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
+import com.dotmarketing.portlets.structure.factories.RelationshipFactory;
 import com.dotmarketing.portlets.structure.model.Structure;
 import com.dotmarketing.util.Logger;
 import com.eng.dotcms.polls.util.PollsUtil;
@@ -80,7 +81,7 @@ public class PollsManAPIImpl implements PollsManAPI {
 	@Override
 	public List<Contentlet> getChoiceByPoll(String pollIdentifier, long languageId) throws DotDataException, DotSecurityException {
 		Contentlet poll = conAPI.findContentletByIdentifier(pollIdentifier, true, languageId, APILocator.getUserAPI().getSystemUser(), true);		
-		return conAPI.getRelatedContent(poll, PollsUtil.getRelationshipByParentAndName(poll.getStructure(), RELATIONSHIP_NAME), APILocator.getUserAPI().getSystemUser(), true);
+		return conAPI.getRelatedContent(poll, RelationshipFactory.getRelationshipByRelationTypeValue(RELATIONSHIP_NAME), APILocator.getUserAPI().getSystemUser(), true);
 	}
 
 	@Override

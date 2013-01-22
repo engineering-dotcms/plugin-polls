@@ -18,17 +18,12 @@ import com.dotmarketing.portlets.structure.model.Field.DataType;
 import com.dotmarketing.portlets.structure.model.Relationship;
 import com.dotmarketing.portlets.structure.model.Structure;
 import com.dotmarketing.portlets.structure.model.Field.FieldType;
-import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.RegEX;
 import com.dotmarketing.util.VelocityUtil;
-import com.eng.dotcms.polls.PollsDeployer;
 import com.eng.dotcms.polls.PollsManAPI;
 import com.eng.dotcms.polls.PollsManFactory;
 
 public class PollsUtil {
-	
-	private static List<Structure> structures = StructureFactory.getStructures();
-	private static List<Relationship> relationships = RelationshipFactory.getAllRelationships();
 	
 	public static Structure createStructure(String name, String description, Host host, int type) throws DotHibernateException {
 		Structure aStructure = new Structure();
@@ -91,43 +86,17 @@ public class PollsUtil {
 	}
 	
 	public static boolean existStructure(String structureName){
-		for(Structure s : structures){
-			if(s.getName().equals(structureName)){
-				Logger.info(PollsDeployer.class, "The Structure "+structureName+" already exists");
-				return true;
-			}
-		}
+		Structure s = StructureCache.getStructureByVelocityVarName(structureName);
+		if(null!=s.getName())
+			return true;
 		return false;
-	}
-	
-	public static String getStructureInode(String structureName) {
-		for(Structure s : structures){
-			if(s.getName().equals(structureName)){
-				return s.getInode();
-			}
-		}
-		return null;
 	}
 	
 	public static boolean existRelationship(String relationshipName, Structure parentStructure){
-		relationships = RelationshipFactory.getRelationshipsByParent(parentStructure);
-		for(Relationship r : relationships){
-			if(r.getRelationTypeValue().equals(relationshipName)){
-				Logger.info(PollsDeployer.class, "The Relationship "+relationshipName+" already exists");
-				return true;
-			}
-		}
+		Relationship rel = RelationshipFactory.getRelationshipByRelationTypeValue(relationshipName);
+		if(null!=rel.getRelationTypeValue())
+			return true;
 		return false;
-	}
-	
-	public static Relationship getRelationshipByParentAndName(Structure parent, String name){
-		relationships = RelationshipFactory.getRelationshipsByParent(parent);
-		for(Relationship r : relationships){
-			if(r.getRelationTypeValue().equals(name)){
-				return r;
-			}
-		}
-		return null;
 	}
 	
 	public static String getVotesHtmlCode(String pollIdentifier, long languageId) throws DotDataException, DotSecurityException{

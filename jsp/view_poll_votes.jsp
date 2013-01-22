@@ -19,7 +19,9 @@
 <div style="margin:auto;">
 		<%
 			String pollId = request.getParameter("pollId");
-			String languageId = (String)session.getAttribute("com.dotmarketing.htmlpage.language");
+			String languageId = request.getParameter("langId");
+			if(null==languageId)
+				languageId = (String)session.getAttribute("com.dotmarketing.htmlpage.language");
 		%>
 		<br />
 		<%=PollsUtil.getVotesHtmlCode(pollId, Long.parseLong(languageId)) %>

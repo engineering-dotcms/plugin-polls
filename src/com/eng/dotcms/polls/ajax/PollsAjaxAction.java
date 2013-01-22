@@ -22,9 +22,9 @@ import com.dotmarketing.business.web.WebAPILocator;
 import com.dotmarketing.cache.StructureCache;
 import com.dotmarketing.portlets.categories.model.Category;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
+import com.dotmarketing.portlets.structure.factories.RelationshipFactory;
 import com.dotmarketing.servlets.ajax.AjaxAction;
 import com.dotmarketing.util.Logger;
-import com.eng.dotcms.polls.util.PollsUtil;
 import com.liferay.portal.model.User;
 import static com.eng.dotcms.polls.util.PollsConstants.*;
 
@@ -67,6 +67,7 @@ public class PollsAjaxAction extends AjaxAction {
                 mm.put("inode", poll.getInode());
                 mm.put("identifier", poll.getIdentifier());
                 mm.put("title", poll.getTitle());
+                mm.put("languageId", String.valueOf(poll.getLanguageId()));
                 mm.put("question", (String)poll.getMap().get("question"));
                 mm.put("date", df.format(poll.getModDate()));
                 mm.put("expired", (String)poll.getMap().get("expired"));
@@ -99,7 +100,7 @@ public class PollsAjaxAction extends AjaxAction {
 			if(expirationDate.after(gc.getTime())){
 				Contentlet poll = new Contentlet();
 				List<Category> categories = APILocator.getCategoryAPI().findTopLevelCategories( APILocator.getUserAPI().getSystemUser(), false );
-				List<Permission> structurePermissions = APILocator.getPermissionAPI().getPermissions(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME));				
+				List<Permission> structurePermissions = APILocator.getPermissionAPI().getPermissions(StructureCache.getStructureByVelocityVarName(CHOICE_STRUCTURE_NAME));				
 				poll.setStructureInode(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME).getInode());
 				poll.setStringProperty("title", request.getParameter("pollTitle"));
 				poll.setStringProperty("question", request.getParameter("pollQuestion"));
@@ -129,7 +130,6 @@ public class PollsAjaxAction extends AjaxAction {
 				}
 				
 				// save all choice
-				structurePermissions = APILocator.getPermissionAPI().getPermissions(StructureCache.getStructureByVelocityVarName(CHOICE_STRUCTURE_NAME));
 				
 				for(Contentlet c : contentRelationships){
 					APILocator.getContentletAPI().validateContentlet( c, categories );
@@ -142,11 +142,13 @@ public class PollsAjaxAction extends AjaxAction {
 				}
 				
 				// save poll
+				structurePermissions = APILocator.getPermissionAPI().getPermissions(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME));
+				
 				APILocator.getContentletAPI().validateContentlet( poll, categories );
 				poll = APILocator.getContentletAPI().checkin( poll, categories, structurePermissions, user, true );
 				APILocator.getContentletAPI().publish(poll, user, true);
 				// relate the contents
-				APILocator.getContentletAPI().relateContent( poll, PollsUtil.getRelationshipByParentAndName(poll.getStructure(), "Parent_Poll-Child_PollChoice"), contentSavedRelationships, user, false );
+				APILocator.getContentletAPI().relateContent( poll, RelationshipFactory.getRelationshipByRelationTypeValue(RELATIONSHIP_NAME), contentSavedRelationships, user, false );
 			}else
 				throw new Exception("The expiration date must be after the actual time.");
 		} catch (Exception e) {

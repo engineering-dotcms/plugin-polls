@@ -1,5 +1,7 @@
 package com.eng.dotcms.polls.velocity;
 
+import static com.eng.dotcms.polls.util.PollsConstants.RELATIONSHIP_NAME;
+
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.velocity.tools.view.tools.ViewTool;
@@ -8,6 +10,7 @@ import com.dotmarketing.cache.StructureCache;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
+import com.dotmarketing.portlets.structure.factories.RelationshipFactory;
 import com.dotmarketing.util.Logger;
 import com.eng.dotcms.polls.util.PollsUtil;
 
@@ -24,7 +27,7 @@ public class PollsViewTool implements ViewTool {
 				if(!Boolean.parseBoolean(expired)){
 					result.setIdentifier(poll.getIdentifier());
 					result.setQuestion(new StringBuilder((String)poll.getMap().get("question")));
-					List<Contentlet> choices = APILocator.getContentletAPI().getRelatedContent(poll, PollsUtil.getRelationshipByParentAndName(poll.getStructure(), "Parent_Poll-Child_PollChoice"), APILocator.getUserAPI().getSystemUser(), true);
+					List<Contentlet> choices = APILocator.getContentletAPI().getRelatedContent(poll, RelationshipFactory.getRelationshipByRelationTypeValue(RELATIONSHIP_NAME), APILocator.getUserAPI().getSystemUser(), true);
 					for(Contentlet c : choices){
 						PollChoice aChoice = new PollChoice();
 						aChoice.setIdentifier(c.getIdentifier());

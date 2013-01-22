@@ -87,13 +87,13 @@ function goToAddPoll(){
     dojo.style(dialog.domNode,'top','80px');
 }
 
-function goToViewPollVotes(pollId){
+function goToViewPollVotes(pollId,languageId){
 	var dialog = new dijit.Dialog({
 		id: 'viewPollVotes',
         title: "<%= LanguageUtil.get(pageContext, "view-poll-votes")%>",
         style: "width: 800px; ",
         content: new dojox.layout.ContentPane({
-            href: "/html/plugins/com.eng.dotcms.polls/view_poll_votes.jsp?pollId="+pollId
+            href: "/html/plugins/com.eng.dotcms.polls/view_poll_votes.jsp?pollId="+pollId+"&langId="+languageId
         }),
         onHide: function() {
         	var dialog=this;
@@ -133,6 +133,7 @@ function loadTable() {
 				var moduser=data.list[i].user;
 				var moddate=data.list[i].date;
 				var expired=data.list[i].expired;
+				var languageId=data.list[i].languageId;
 				
 				if(expired=="true"){
 					var row="<tr class=\"expiredPoll\">"+
@@ -141,7 +142,7 @@ function loadTable() {
 			          "<td style=\"width: 55%\">"+question+"</td>"+
 			          "<td style=\"width: 10%\">"+moduser+"</td>"+
 			          "<td style=\"width: 13%\">"+moddate+"</td>"+
-			          "<td style=\"width: 2%\"><a style=\"cursor: pointer\" onclick=\"goToViewPollVotes('"+identifier+"')\" title=\"<%=LanguageUtil.get(pageContext,"view-poll-votes")%>\"><span class='previewIcon'></span></a></td>"+
+			          "<td style=\"width: 2%\"><a style=\"cursor: pointer\" onclick=\"goToViewPollVotes('"+identifier+"','"+languageId+"')\" title=\"<%=LanguageUtil.get(pageContext,"view-poll-votes")%>\"><span class='previewIcon'></span></a></td>"+
 			         "</tr>";					
 				}else{
 					var row="<tr>"+ 
@@ -150,7 +151,7 @@ function loadTable() {
 			          "<td style=\"width: 55%\">"+question+"</td>"+
 			          "<td style=\"width: 10%\">"+moduser+"</td>"+
 			          "<td style=\"width: 13%\">"+moddate+"</td>"+
-			          "<td style=\"width: 2%\"><a style=\"cursor: pointer\" onclick=\"goToViewPollVotes('"+identifier+"')\" title=\"<%=LanguageUtil.get(pageContext,"view-poll-votes")%>\"><span class='previewIcon'></span></a></td>"+
+			          "<td style=\"width: 2%\"><a style=\"cursor: pointer\" onclick=\"goToViewPollVotes('"+identifier+"','"+languageId+"')\" title=\"<%=LanguageUtil.get(pageContext,"view-poll-votes")%>\"><span class='previewIcon'></span></a></td>"+
 			         "</tr>";					
 				}
 				dojo.place(dojo.toDom(row),'table_body');				

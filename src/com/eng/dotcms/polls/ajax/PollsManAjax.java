@@ -1,7 +1,9 @@
 package com.eng.dotcms.polls.ajax;
 
 import javax.servlet.http.HttpSession;
-import uk.ltd.getahead.dwr.WebContextFactory;
+
+import org.directwebremoting.WebContextFactory;
+
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.portlets.contentlet.business.DotContentletStateException;
@@ -12,7 +14,6 @@ import com.eng.dotcms.polls.util.PollsUtil;
 import com.liferay.counter.ejb.CounterManagerUtil;
 import com.liferay.portal.model.User;
 
-@SuppressWarnings("deprecation")
 public class PollsManAjax {
 		
 	public PollsManAjax.VoteResult vote(String pollTitle, String pollIdentifier, String choiceIdentifier, boolean showVotes) {

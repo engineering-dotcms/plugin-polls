@@ -5,9 +5,8 @@
 	require(["dojo/parser", "dijit/form/SimpleTextarea"]);
 	
 	function savePoll(){
-  
 		var form = dijit.byId("formSavePoll");
-
+		dijit.byId("save").setAttribute('disabled',true);
 		dijit.byId("pollTitle").setAttribute('required',true);
 		dijit.byId("pollQuestion").setAttribute('required',true);
 		dijit.byId("pollChoice").setAttribute('required',true);
@@ -17,6 +16,7 @@
 				form: dojo.byId("formSavePoll"),
 				handleAs: "text",
 				load: function(data){
+					dojo.byId("response").innerHTML = '<%= LanguageUtil.get(pageContext, "saved-poll") %>'
 					if(data.indexOf("FAILURE") > -1){						
 						alert(data);
 					}
@@ -24,12 +24,13 @@
 						backToPollsList('addPoll',true);
 					}
 				},
-				error: function(error){
+				error: function(error) {
+					dojo.byId("response").innerHTML = '<%= LanguageUtil.get(pageContext, "not-saved-poll") %>'
 					alert(error);
 					
 				}
 			}
-
+		    dojo.byId("response").innerHTML = '<%= LanguageUtil.get(pageContext, "saving-poll") %>'
 			var deferred = dojo.xhrPost(xhrArgs);				
 		}
 
@@ -54,7 +55,8 @@
 </style>
 
 <div style="margin:auto;">
-	<i><%= LanguageUtil.get(pageContext, "Create-Poll-Description") %>.</i>
+	<i><%= LanguageUtil.get(pageContext, "Create-Poll-Description") %>.</i><br />
+	<div id="response" style="font-weight: bold; margin-top: 5px; margin-bottom: 5px;"></div>
 	<div dojoType="dijit.form.Form"  name="formSavePoll"  id="formSavePoll" onsubmit="return false;">
 		<table class="myTable" border=0 style="margin: auto" align="center">
 			<tr>
