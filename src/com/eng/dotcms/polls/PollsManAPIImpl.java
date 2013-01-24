@@ -16,7 +16,6 @@ import com.dotmarketing.portlets.contentlet.model.Contentlet;
 import com.dotmarketing.portlets.structure.factories.RelationshipFactory;
 import com.dotmarketing.portlets.structure.model.Structure;
 import com.dotmarketing.util.Logger;
-import com.eng.dotcms.polls.util.PollsUtil;
 import com.liferay.portal.model.User;
 import static com.eng.dotcms.polls.util.PollsConstants.*;
 

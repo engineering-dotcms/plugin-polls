@@ -3,8 +3,6 @@ package com.eng.dotcms.polls.ajax;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;

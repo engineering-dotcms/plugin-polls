@@ -2,7 +2,6 @@ package com.eng.dotcms.polls.quartz.job.util;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import static com.eng.dotcms.polls.util.PollsConstants.PROP_POLL_VOTES_FILENAME;
 
 public class PollsVotesFilenameFilter implements FilenameFilter {
 	
