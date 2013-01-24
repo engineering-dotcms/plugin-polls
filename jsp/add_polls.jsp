@@ -16,7 +16,6 @@
 		var form = dijit.byId("formSavePoll");
 		var closeBtn = dijit.byId("closeSave");
 		var divResponse = dojo.byId("response");
-		alert(divResponse);
 		dijit.byId("save").setAttribute('disabled',true);
 		dijit.byId("closeSave").setAttribute('disabled',true);
 		dijit.byId("cancelSave").setAttribute('disabled',true);

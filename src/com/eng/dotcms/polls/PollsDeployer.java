@@ -8,7 +8,6 @@ import org.quartz.CronTrigger;
 import org.quartz.SchedulerException;
 
 import com.dotmarketing.business.APILocator;
-import com.dotmarketing.business.CacheLocator;
 import com.dotmarketing.cache.StructureCache;
 import com.dotmarketing.cms.content.submit.PluginDeployer;
 import com.dotmarketing.exception.DotDataException;
@@ -86,7 +85,6 @@ public class PollsDeployer extends PluginDeployer {
 			return true;
 		}catch(Exception e){
 			Logger.error(PollsDeployer.class, "Error in deploy plugin "+PLUGIN_ID, e);
-			CacheLocator.getCacheAdministrator().flushAll();
 			return false;
 		}
 	}

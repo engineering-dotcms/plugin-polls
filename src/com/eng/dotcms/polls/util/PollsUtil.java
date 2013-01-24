@@ -4,12 +4,15 @@ import java.text.NumberFormat;
 import java.util.List;
 
 import com.dotmarketing.beans.Host;
+import com.dotmarketing.business.APILocator;
 import com.dotmarketing.cache.FieldsCache;
 import com.dotmarketing.cache.StructureCache;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotHibernateException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
+import com.dotmarketing.portlets.languagesmanager.business.LanguageAPI;
+import com.dotmarketing.portlets.languagesmanager.model.Language;
 import com.dotmarketing.portlets.structure.factories.FieldFactory;
 import com.dotmarketing.portlets.structure.factories.RelationshipFactory;
 import com.dotmarketing.portlets.structure.factories.StructureFactory;
@@ -24,6 +27,8 @@ import com.eng.dotcms.polls.PollsManAPI;
 import com.eng.dotcms.polls.PollsManFactory;
 
 public class PollsUtil {
+	
+	private static LanguageAPI langAPI = APILocator.getLanguageAPI();
 	
 	public static Structure createStructure(String name, String description, Host host, int type) throws DotHibernateException {
 		Structure aStructure = new Structure();
@@ -101,6 +106,7 @@ public class PollsUtil {
 	
 	public static String getVotesHtmlCode(String pollIdentifier, long languageId) throws DotDataException, DotSecurityException{
 		PollsManAPI pollsAPI = PollsManFactory.getPollsManAPI(); 
+		Language lang = langAPI.getLanguage(languageId);
 		StringBuilder htmlCodeBuilder = new StringBuilder();
 		NumberFormat numberFormat = NumberFormat.getNumberInstance();
 		NumberFormat percentFormat = NumberFormat.getPercentInstance();
@@ -111,13 +117,13 @@ public class PollsUtil {
 		htmlCodeBuilder.append("<thead>");
 		htmlCodeBuilder.append("<tr>");
 		htmlCodeBuilder.append("<th>");
-		htmlCodeBuilder.append("Choice");
+		htmlCodeBuilder.append(langAPI.getStringKey(lang, "Choice"));
 		htmlCodeBuilder.append("</th>");
 		htmlCodeBuilder.append("<th>");
-		htmlCodeBuilder.append("# Votes");
+		htmlCodeBuilder.append(langAPI.getStringKey(lang, "num-votes"));
 		htmlCodeBuilder.append("</th>");
 		htmlCodeBuilder.append("<th>");
-		htmlCodeBuilder.append("Percentage");
+		htmlCodeBuilder.append(langAPI.getStringKey(lang, "Percentage"));
 		htmlCodeBuilder.append("</th>");
 		htmlCodeBuilder.append("</thead>");
 		htmlCodeBuilder.append("<tbody>");
@@ -142,9 +148,9 @@ public class PollsUtil {
 		htmlCodeBuilder.append("<tr>");
 		htmlCodeBuilder.append("<td colspan=\"3\" class=\"poll-responses\">");
 		if(totalVotes ==0){
-			htmlCodeBuilder.append("No responses");
+			htmlCodeBuilder.append(langAPI.getStringKey(lang, "no-responses"));
 		} else{
-			htmlCodeBuilder.append("Total: " + totalVotes + " responses");
+			htmlCodeBuilder.append(langAPI.getStringKey(lang, "Total")+": " + totalVotes + " " + langAPI.getStringKey(lang, "responses"));
 		}			
 		htmlCodeBuilder.append("</td>");
 		htmlCodeBuilder.append("</tr>");
