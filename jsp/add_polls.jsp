@@ -143,13 +143,13 @@
 			
 			<tr>
 				<td align="right">
-					<%= LanguageUtil.get(pageContext, "path") %>:
+					<%= LanguageUtil.get(pageContext, "Path") %>:
 				</td>
 				<td>						          	
-					<div id="HostSelector" dojoType="dotcms.dijit.form.HostFolderFilteringSelect" onChange="updateHostFolderValues('path');"
+					<div id="HostSelector" dojoType="dotcms.dijit.form.HostFolderFilteringSelect" onChange="updateHostFolderValues('pollpath');"
 			            value=""></div>
 		                
-					<input type="hidden" name="path" id="path" value=""/>
+					<input type="hidden" name="path" id="pollpath" value=""/>
 			     	<input type="hidden" name="hostId" id="hostId" value=""/>
 			     	<input type="hidden" name="folderInode" id="folderInode" value=""/>
 				</td>	

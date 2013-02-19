@@ -25,6 +25,7 @@ import com.dotmarketing.portlets.contentlet.model.Contentlet;
 import com.dotmarketing.portlets.structure.factories.RelationshipFactory;
 import com.dotmarketing.servlets.ajax.AjaxAction;
 import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.UtilMethods;
 import com.liferay.portal.model.User;
 import static com.eng.dotcms.polls.util.PollsConstants.*;
 
@@ -109,8 +110,12 @@ public class PollsAjaxAction extends AjaxAction {
 				poll.setHost(WebAPILocator.getHostWebAPI().getCurrentHost(request).getIdentifier());
 				poll.setLanguageId(Long.parseLong(language));
 				poll.setModUser(user.getUserId());
-				poll.setModDate(new GregorianCalendar().getTime());
-				poll.setStringProperty("pollpath", request.getParameter("path"));
+				poll.setModDate(new GregorianCalendar().getTime());				
+				poll.setStringProperty("pollpath", request.getParameter("pollpath"));
+				if(UtilMethods.isSet(request.getParameter("hostId")))
+					poll.setHost(request.getParameter("hostId"));
+				else if(UtilMethods.isSet(request.getParameter("folderInode")))
+					poll.setFolder(request.getParameter("folderInode"));
 				
 				//add choices
 				String _choices = request.getParameter("pollChoice");
@@ -126,7 +131,11 @@ public class PollsAjaxAction extends AjaxAction {
 					choice.setLanguageId(Long.parseLong(language));
 					choice.setModUser(user.getUserId());
 					choice.setModDate(new GregorianCalendar().getTime());	
-					choice.setStringProperty("choicepath", request.getParameter("path"));			
+					choice.setStringProperty("choicepath", request.getParameter("pollpath"));	
+					if(UtilMethods.isSet(request.getParameter("hostId")))
+						choice.setHost(request.getParameter("hostId"));
+					else if(UtilMethods.isSet(request.getParameter("folderInode")))
+						choice.setFolder(request.getParameter("folderInode"));
 					// add relationship
 					contentRelationships.add(choice);
 				}
