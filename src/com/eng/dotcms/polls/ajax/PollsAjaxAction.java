@@ -110,6 +110,7 @@ public class PollsAjaxAction extends AjaxAction {
 				poll.setLanguageId(Long.parseLong(language));
 				poll.setModUser(user.getUserId());
 				poll.setModDate(new GregorianCalendar().getTime());
+				poll.setStringProperty("pollpath", request.getParameter("path"));
 				
 				//add choices
 				String _choices = request.getParameter("pollChoice");
@@ -124,7 +125,8 @@ public class PollsAjaxAction extends AjaxAction {
 					choice.setHost(WebAPILocator.getHostWebAPI().getCurrentHost(request).getIdentifier());
 					choice.setLanguageId(Long.parseLong(language));
 					choice.setModUser(user.getUserId());
-					choice.setModDate(new GregorianCalendar().getTime());				
+					choice.setModDate(new GregorianCalendar().getTime());	
+					choice.setStringProperty("choicepath", request.getParameter("path"));			
 					// add relationship
 					contentRelationships.add(choice);
 				}

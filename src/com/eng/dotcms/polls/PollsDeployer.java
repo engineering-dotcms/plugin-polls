@@ -8,6 +8,7 @@ import org.quartz.CronTrigger;
 import org.quartz.SchedulerException;
 
 import com.dotmarketing.business.APILocator;
+import com.dotmarketing.business.CacheLocator;
 import com.dotmarketing.cache.StructureCache;
 import com.dotmarketing.cms.content.submit.PluginDeployer;
 import com.dotmarketing.exception.DotDataException;
@@ -48,6 +49,7 @@ public class PollsDeployer extends PluginDeployer {
 					PollsUtil.createField(pollStructure.getInode(), "Question", FieldType.TEXT_AREA, DataType.LONG_TEXT, true, true, false, true);
 					PollsUtil.createField(pollStructure.getInode(), "Expiration Date", FieldType.DATE_TIME, DataType.DATE, true, true, false, false);
 					PollsUtil.createField(pollStructure.getInode(), "Expired", FieldType.TEXT, DataType.TEXT, true, true, false, false);
+					PollsUtil.createField(pollStructure.getInode(), "PollPath", FieldType.HOST_OR_FOLDER, DataType.TEXT, true, true, false, false);
 				}
 				
 				// create PollChoice Structure
@@ -56,6 +58,7 @@ public class PollsDeployer extends PluginDeployer {
 					Structure pollChoiceStructure = PollsUtil.createStructure(CHOICE_STRUCTURE_NAME, CHOICE_STRUCTURE_NAME, APILocator.getHostAPI().findDefaultHost(APILocator.getUserAPI().getSystemUser(), true), Structure.STRUCTURE_TYPE_CONTENT);
 					PollsUtil.createField(pollChoiceStructure.getInode(), "Text", FieldType.TEXT, DataType.TEXT, true, true, false, true);
 					PollsUtil.createField(pollChoiceStructure.getInode(), "Id", FieldType.TEXT, DataType.TEXT, true, true, false, false);
+					PollsUtil.createField(pollChoiceStructure.getInode(), "ChoicePath", FieldType.HOST_OR_FOLDER, DataType.TEXT, true, true, false, false);
 				}				
 			}
 			// create PollVote Structure
@@ -85,6 +88,7 @@ public class PollsDeployer extends PluginDeployer {
 			return true;
 		}catch(Exception e){
 			Logger.error(PollsDeployer.class, "Error in deploy plugin "+PLUGIN_ID, e);
+			CacheLocator.getCacheAdministrator().flushAll();
 			return false;
 		}
 	}

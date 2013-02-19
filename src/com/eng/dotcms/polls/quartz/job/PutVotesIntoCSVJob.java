@@ -1,5 +1,13 @@
 package com.eng.dotcms.polls.quartz.job;
 
+import static com.eng.dotcms.polls.util.PollsConstants.PLUGIN_ID;
+import static com.eng.dotcms.polls.util.PollsConstants.PROP_POLL_STATUS_BUSY;
+import static com.eng.dotcms.polls.util.PollsConstants.PROP_POLL_STATUS_FILENAME;
+import static com.eng.dotcms.polls.util.PollsConstants.PROP_POLL_STATUS_FREE;
+import static com.eng.dotcms.polls.util.PollsConstants.PROP_POLL_VOTES_FILENAME;
+import static com.eng.dotcms.polls.util.PollsConstants.PROP_PUT_CSV_JOB_DEST_PATH;
+import static com.eng.dotcms.polls.util.PollsConstants.VOTE_STRUCTURE_NAME;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -23,8 +31,6 @@ import com.dotmarketing.portlets.contentlet.model.Contentlet;
 import com.dotmarketing.util.Logger;
 import com.eng.dotcms.polls.quartz.job.util.PollsVotesFilenameFilter;
 
-import static com.eng.dotcms.polls.util.PollsConstants.*;
-
 /**
  * 
  * @author Graziano Aliberti - Engineering Ingegneria Informatica S.p.a
@@ -38,12 +44,14 @@ public class PutVotesIntoCSVJob implements StatefulJob {
 	private PluginAPI pluginAPI;
 	private SimpleDateFormat sdf;
 	private String _destinationFolder; 
+	private SyncCSVHandler syncHandler;
 	
 	public PutVotesIntoCSVJob(){
 		conAPI = APILocator.getContentletAPI();
 		userAPI = APILocator.getUserAPI();
 		pluginAPI = APILocator.getPluginAPI();
 		sdf = new SimpleDateFormat("yyyy-MM-dd_hh:mm:ss");
+		syncHandler = new SyncCSVHandler();
 	}
 
 	@Override
@@ -84,6 +92,9 @@ public class PutVotesIntoCSVJob implements StatefulJob {
 				
 				// unlock
 				unlock(destinationFolder);
+				
+				//sync csv with staging
+				syncHandler.sync();
 			}
 			
 			Logger.info(this, "END: putting votes into CSV. Number of votes: " + votes.size());
