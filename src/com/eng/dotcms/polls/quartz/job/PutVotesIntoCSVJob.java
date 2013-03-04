@@ -185,6 +185,8 @@ public class PutVotesIntoCSVJob implements StatefulJob {
 		csvVote.append(vote.getMap().get("choice").toString());
 		csvVote.append("|");
 		csvVote.append(vote.getMap().get("user").toString());
+		csvVote.append("|");
+		csvVote.append(vote.getLanguageId());
 		return csvVote;				
 	}
 	

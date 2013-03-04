@@ -61,8 +61,8 @@ public class PollsManAPIImpl implements PollsManAPI {
 		vote.setModDate(new GregorianCalendar().getTime());
 		vote.setModUser(null!=user?user.getUserId():APILocator.getUserAPI().getAnonymousUser().getUserId());
 		conAPI.validateContentlet(vote, categories);
-		vote = APILocator.getContentletAPI().checkin(vote, categories, structurePermissions, null!=user?user:APILocator.getUserAPI().getSystemUser(), true);
-		conAPI.publish(vote, null!=user?user:APILocator.getUserAPI().getSystemUser(), true);
+		vote = APILocator.getContentletAPI().checkin(vote, categories, structurePermissions, null!=user?user:APILocator.getUserAPI().getAnonymousUser(), true);
+		conAPI.publish(vote, null!=user?user:APILocator.getUserAPI().getAnonymousUser(), true);
 	}
 
 	@Override

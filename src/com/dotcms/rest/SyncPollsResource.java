@@ -43,8 +43,8 @@ public class SyncPollsResource extends WebResource {
 		try {
 			String csvPath = pAPI.loadProperty(
 					PollsConstants.PLUGIN_ID, 
-					PollsConstants.PROP_PUT_CSV_JOB_DEST_PATH);
-
+					PollsConstants.PROP_GET_CSV_JOB_SRC_PATH);
+			
 			//Scompatto il file
 			untar(csvZip, csvPath, fileDetail.getFileName());
 			

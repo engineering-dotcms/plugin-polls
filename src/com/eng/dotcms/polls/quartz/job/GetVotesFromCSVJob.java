@@ -22,7 +22,6 @@ import com.dotmarketing.portlets.categories.model.Category;
 import com.dotmarketing.portlets.contentlet.business.ContentletAPI;
 import com.dotmarketing.portlets.contentlet.business.DotContentletStateException;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
-import com.dotmarketing.portlets.languagesmanager.business.LanguageAPI;
 import com.dotmarketing.util.Logger;
 import com.eng.dotcms.polls.quartz.job.util.PollsVotesFilenameFilter;
 
@@ -39,14 +38,12 @@ public class GetVotesFromCSVJob implements StatefulJob {
 	private ContentletAPI conAPI;
 	private UserAPI userAPI;
 	private PluginAPI pluginAPI;
-	private LanguageAPI langAPI;
 	private String _sourceFolder;
 	
 	public GetVotesFromCSVJob() {
 		conAPI = APILocator.getContentletAPI();
 		userAPI = APILocator.getUserAPI();
 		pluginAPI = APILocator.getPluginAPI();
-		langAPI = APILocator.getLanguageAPI();
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -156,22 +153,27 @@ public class GetVotesFromCSVJob implements StatefulJob {
 		for(String voteString:votesString){
 			String[] voteArr = voteString.split("[|]");
 			try{
-				Contentlet con = conAPI.findContentletByIdentifier(voteArr[0], true, langAPI.getDefaultLanguage().getId(), userAPI.getSystemUser(), true);
+				Contentlet con = conAPI.findContentletByIdentifier(voteArr[0], true, Long.parseLong(voteArr[4]), userAPI.getSystemUser(), true);
 				if(null==con){
 					Contentlet vote = new Contentlet();
+					vote.setIdentifier(voteArr[0]);
 					vote.setStructureInode(StructureCache.getStructureByVelocityVarName(VOTE_STRUCTURE_NAME).getInode());
 					vote.setStringProperty("poll", voteArr[1]);
 					vote.setStringProperty("choice", voteArr[2]);
 					vote.setStringProperty("user", voteArr[3]);
+					vote.setLanguageId(Long.parseLong(voteArr[4]));
 					votesToCheckin.add(vote);
-				}
+				}else
+					Logger.info(this, "The Vote identified by " + voteArr[0] + " already exists. Leave it as is.");
 			}catch(DotContentletStateException e){
 				// the contentlet doesn't exists
 				Contentlet vote = new Contentlet();
+				vote.setIdentifier(voteArr[0]);
 				vote.setStructureInode(StructureCache.getStructureByVelocityVarName(VOTE_STRUCTURE_NAME).getInode());
 				vote.setStringProperty("poll", voteArr[1]);
 				vote.setStringProperty("choice", voteArr[2]);
 				vote.setStringProperty("user", voteArr[3]);
+				vote.setLanguageId(Long.parseLong(voteArr[4]));
 				votesToCheckin.add(vote);
 			}
 		}

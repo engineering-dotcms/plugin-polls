@@ -7,8 +7,12 @@ import java.util.HashMap;
 import org.quartz.CronTrigger;
 import org.quartz.SchedulerException;
 
+import com.dotmarketing.beans.Permission;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.CacheLocator;
+import com.dotmarketing.business.FactoryLocator;
+import com.dotmarketing.business.PermissionAPI;
+import com.dotmarketing.business.PermissionFactory;
 import com.dotmarketing.cache.StructureCache;
 import com.dotmarketing.cms.content.submit.PluginDeployer;
 import com.dotmarketing.exception.DotDataException;
@@ -22,6 +26,7 @@ import com.dotmarketing.quartz.CronScheduledTask;
 import com.dotmarketing.quartz.QuartzUtils;
 import com.dotmarketing.util.Logger;
 import com.eng.dotcms.polls.util.PollsUtil;
+
 import static com.eng.dotcms.polls.util.PollsConstants.*;
 
 /**
@@ -35,6 +40,7 @@ import static com.eng.dotcms.polls.util.PollsConstants.*;
 public class PollsDeployer extends PluginDeployer {
 		
 	private PluginAPI pluginAPI = APILocator.getPluginAPI();
+	private PermissionAPI perAPI = APILocator.getPermissionAPI();
 	
 	@Override
 	public boolean deploy() {
@@ -68,6 +74,14 @@ public class PollsDeployer extends PluginDeployer {
 				PollsUtil.createField(pollVoteStructure.getInode(), "Poll", FieldType.TEXT, DataType.TEXT, true, true, false, true);
 				PollsUtil.createField(pollVoteStructure.getInode(), "Choice", FieldType.TEXT, DataType.TEXT, true, true, false, true);
 				PollsUtil.createField(pollVoteStructure.getInode(), "User", FieldType.TEXT, DataType.TEXT, true, false, false, true);
+				
+				Permission cmsAnonPublish = new Permission();
+				cmsAnonPublish.setRoleId(APILocator.getRoleAPI().loadCMSAnonymousRole().getId());
+				cmsAnonPublish.setPermission(PermissionAPI.PERMISSION_PUBLISH);
+				cmsAnonPublish.setBitPermission(true);
+				cmsAnonPublish.setInode(pollVoteStructure.getPermissionId());
+				perAPI.save(cmsAnonPublish, pollVoteStructure, APILocator.getUserAPI().getSystemUser(), true);
+				
 			}
 			if(!PollsUtil.existRelationship(RELATIONSHIP_NAME, StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME))){
 				Logger.info(PollsDeployer.class, "The Relationship must be created");

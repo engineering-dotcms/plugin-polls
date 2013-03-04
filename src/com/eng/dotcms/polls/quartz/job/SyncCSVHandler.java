@@ -46,7 +46,7 @@ public class SyncCSVHandler {
 			File csvRoot = new File(
 					pAPI.loadProperty(
 					PollsConstants.PLUGIN_ID, 
-					PollsConstants.PROP_GET_CSV_JOB_SRC_PATH));
+					PollsConstants.PROP_PUT_CSV_JOB_DEST_PATH));
 
 			ArrayList<File> list = new ArrayList<File>(1);
 			list.add(csvRoot);
