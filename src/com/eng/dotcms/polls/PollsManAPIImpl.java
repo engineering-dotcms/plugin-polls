@@ -58,6 +58,7 @@ public class PollsManAPIImpl implements PollsManAPI {
 		vote.setStringProperty("user", userId);
 		vote.setStringProperty("poll", pollIdentifier);
 		vote.setStringProperty("choice", choiceIdentifier);
+		vote.setBoolProperty("sent_to_sender", false);
 		vote.setModDate(new GregorianCalendar().getTime());
 		vote.setModUser(null!=user?user.getUserId():APILocator.getUserAPI().getAnonymousUser().getUserId());
 		conAPI.validateContentlet(vote, categories);

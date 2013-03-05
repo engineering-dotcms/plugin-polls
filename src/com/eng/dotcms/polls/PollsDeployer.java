@@ -1,8 +1,10 @@
 package com.eng.dotcms.polls;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import org.quartz.CronTrigger;
 import org.quartz.SchedulerException;
@@ -10,13 +12,12 @@ import org.quartz.SchedulerException;
 import com.dotmarketing.beans.Permission;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.CacheLocator;
-import com.dotmarketing.business.FactoryLocator;
 import com.dotmarketing.business.PermissionAPI;
-import com.dotmarketing.business.PermissionFactory;
 import com.dotmarketing.cache.StructureCache;
 import com.dotmarketing.cms.content.submit.PluginDeployer;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.plugin.business.PluginAPI;
+import com.dotmarketing.portlets.contentlet.business.Contentlet;
 import com.dotmarketing.portlets.structure.factories.RelationshipFactory;
 import com.dotmarketing.portlets.structure.model.Field.DataType;
 import com.dotmarketing.portlets.structure.model.Field.FieldType;
@@ -65,7 +66,22 @@ public class PollsDeployer extends PluginDeployer {
 					PollsUtil.createField(pollChoiceStructure.getInode(), "Text", FieldType.TEXT, DataType.TEXT, true, true, false, true);
 					PollsUtil.createField(pollChoiceStructure.getInode(), "Id", FieldType.TEXT, DataType.TEXT, true, true, false, false);
 					PollsUtil.createField(pollChoiceStructure.getInode(), "ChoicePath", FieldType.HOST_OR_FOLDER, DataType.TEXT, true, true, false, false);
-				}				
+				}	
+				
+				// create relationship between the Poll structures
+				if(!PollsUtil.existRelationship(RELATIONSHIP_NAME, StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME))){
+					Logger.info(PollsDeployer.class, "The Relationship must be created");
+					Relationship relationshipPollPollChoice = new Relationship();
+					relationshipPollPollChoice.setParentStructureInode(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME).getInode());
+					relationshipPollPollChoice.setParentRelationName("Parent "+POLL_STRUCTURE_NAME);
+					relationshipPollPollChoice.setParentRequired(false);
+					relationshipPollPollChoice.setChildStructureInode(StructureCache.getStructureByVelocityVarName(CHOICE_STRUCTURE_NAME).getInode());
+					relationshipPollPollChoice.setChildRelationName("Child "+CHOICE_STRUCTURE_NAME);
+					relationshipPollPollChoice.setChildRequired(false);
+					relationshipPollPollChoice.setCardinality(0);
+					relationshipPollPollChoice.setRelationTypeValue(RELATIONSHIP_NAME);
+					RelationshipFactory.saveRelationship(relationshipPollPollChoice);					
+				}	
 			}
 			// create PollVote Structure
 			if(!PollsUtil.existStructure(VOTE_STRUCTURE_NAME)) {
@@ -73,29 +89,13 @@ public class PollsDeployer extends PluginDeployer {
 				Structure pollVoteStructure = PollsUtil.createStructure(VOTE_STRUCTURE_NAME, VOTE_STRUCTURE_NAME, APILocator.getHostAPI().findDefaultHost(APILocator.getUserAPI().getSystemUser(), true), Structure.STRUCTURE_TYPE_CONTENT);
 				PollsUtil.createField(pollVoteStructure.getInode(), "Poll", FieldType.TEXT, DataType.TEXT, true, true, false, true);
 				PollsUtil.createField(pollVoteStructure.getInode(), "Choice", FieldType.TEXT, DataType.TEXT, true, true, false, true);
-				PollsUtil.createField(pollVoteStructure.getInode(), "User", FieldType.TEXT, DataType.TEXT, true, false, false, true);
+				PollsUtil.createField(pollVoteStructure.getInode(), "User", FieldType.TEXT, DataType.TEXT, true, false, false, true);				
+				// handle the vote back for remote publishing
+				PollsUtil.createField(pollVoteStructure.getInode(), "Sent to Sender", FieldType.RADIO, DataType.BOOL, true, true, false, false);
 				
-				Permission cmsAnonPublish = new Permission();
-				cmsAnonPublish.setRoleId(APILocator.getRoleAPI().loadCMSAnonymousRole().getId());
-				cmsAnonPublish.setPermission(PermissionAPI.PERMISSION_PUBLISH);
-				cmsAnonPublish.setBitPermission(true);
-				cmsAnonPublish.setInode(pollVoteStructure.getPermissionId());
-				perAPI.save(cmsAnonPublish, pollVoteStructure, APILocator.getUserAPI().getSystemUser(), true);
-				
+				perAPI.assignPermissions(addAnonymousPermissions(pollVoteStructure), pollVoteStructure, APILocator.getUserAPI().getSystemUser(), true);
 			}
-			if(!PollsUtil.existRelationship(RELATIONSHIP_NAME, StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME))){
-				Logger.info(PollsDeployer.class, "The Relationship must be created");
-				Relationship relationshipPollPollChoice = new Relationship();
-				relationshipPollPollChoice.setParentStructureInode(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME).getInode());
-				relationshipPollPollChoice.setParentRelationName("Parent "+POLL_STRUCTURE_NAME);
-				relationshipPollPollChoice.setParentRequired(false);
-				relationshipPollPollChoice.setChildStructureInode(StructureCache.getStructureByVelocityVarName(CHOICE_STRUCTURE_NAME).getInode());
-				relationshipPollPollChoice.setChildRelationName("Child "+CHOICE_STRUCTURE_NAME);
-				relationshipPollPollChoice.setChildRequired(false);
-				relationshipPollPollChoice.setCardinality(0);
-				relationshipPollPollChoice.setRelationTypeValue(RELATIONSHIP_NAME);
-				RelationshipFactory.saveRelationship(relationshipPollPollChoice);					
-			}			
+					
 			// scheduled all the configured jobs.
 			scheduleJobs();
 			
@@ -105,6 +105,34 @@ public class PollsDeployer extends PluginDeployer {
 			CacheLocator.getCacheAdministrator().flushAll();
 			return false;
 		}
+	}
+
+	private List<Permission> addAnonymousPermissions(Structure pollVoteStructure) throws DotDataException {
+		List<Permission> votePermissions = new ArrayList<Permission>();
+		Permission cmsAnonPublish = new Permission();
+		cmsAnonPublish.setType(Contentlet.class.getCanonicalName());
+		cmsAnonPublish.setRoleId(APILocator.getRoleAPI().loadCMSAnonymousRole().getId());
+		cmsAnonPublish.setPermission(PermissionAPI.PERMISSION_PUBLISH);
+		cmsAnonPublish.setBitPermission(true);
+		cmsAnonPublish.setInode(pollVoteStructure.getPermissionId());
+		
+		Permission cmsAnonEdit = new Permission();
+		cmsAnonEdit.setType(Contentlet.class.getCanonicalName());
+		cmsAnonEdit.setRoleId(APILocator.getRoleAPI().loadCMSAnonymousRole().getId());
+		cmsAnonEdit.setPermission(PermissionAPI.PERMISSION_EDIT);
+		cmsAnonEdit.setBitPermission(true);
+		cmsAnonEdit.setInode(pollVoteStructure.getPermissionId());
+		
+		Permission cmsAnonUse = new Permission();
+		cmsAnonUse.setType(Contentlet.class.getCanonicalName());
+		cmsAnonUse.setRoleId(APILocator.getRoleAPI().loadCMSAnonymousRole().getId());
+		cmsAnonUse.setPermission(PermissionAPI.PERMISSION_USE);
+		cmsAnonUse.setBitPermission(true);
+		cmsAnonUse.setInode(pollVoteStructure.getPermissionId());
+		votePermissions.add(cmsAnonUse);
+		votePermissions.add(cmsAnonEdit);
+		votePermissions.add(cmsAnonPublish);
+		return votePermissions;
 	}
 	
 	private void scheduleJobs() throws SchedulerException, ParseException, ClassNotFoundException, DotDataException {

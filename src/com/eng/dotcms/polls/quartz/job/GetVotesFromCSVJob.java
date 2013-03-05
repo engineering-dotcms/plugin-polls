@@ -46,7 +46,6 @@ public class GetVotesFromCSVJob implements StatefulJob {
 		pluginAPI = APILocator.getPluginAPI();
 	}
 	
-	@SuppressWarnings("deprecation")
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		try{
@@ -64,11 +63,10 @@ public class GetVotesFromCSVJob implements StatefulJob {
 			
 			if(pluginAPI.loadProperty(PLUGIN_ID, PROP_POLL_STATUS_FREE).equals(status)){
 				Logger.info(this, "The Status is FREE: I can read the CSV file...");
-				
 				// get the votes to checkin
 				List<Contentlet> votes = getVotesToCheckin(getVotesFromCSV(getSourceFile(sourceFolder)));
 				List<Category> categories = APILocator.getCategoryAPI().findTopLevelCategories( APILocator.getUserAPI().getSystemUser(), false );
-				List<Permission> structurePermissions = APILocator.getPermissionAPI().getPermissions(StructureCache.getStructureByName(VOTE_STRUCTURE_NAME));
+				List<Permission> structurePermissions = APILocator.getPermissionAPI().getPermissions(StructureCache.getStructureByVelocityVarName(VOTE_STRUCTURE_NAME));
 				for(Contentlet vote:votes){
 					// validate and checkin...and publish
 					conAPI.validateContentlet(vote, categories);
@@ -96,16 +94,19 @@ public class GetVotesFromCSVJob implements StatefulJob {
 		File[] csv = parent.listFiles(new PollsVotesFilenameFilter(pluginAPI.loadProperty(PLUGIN_ID, PROP_POLL_VOTES_FILENAME)));
 		if(csv.length==1)
 			return parent.listFiles(new PollsVotesFilenameFilter(pluginAPI.loadProperty(PLUGIN_ID, PROP_POLL_VOTES_FILENAME)))[0];
-		else if(csv.length>1)
+		else if(csv.length>1){
+			cleanFolder(parent);
 			throw new IllegalStateException("Excepted 1 csv file, found: " + csv.length);
-		else
+		}else
 			throw new IllegalStateException("Excepted 1 csv file, found 0");
 	}	
 	
 	private File getStatusFile(File parent) throws IOException, DotDataException {
 		File csv = new File(parent,pluginAPI.loadProperty(PLUGIN_ID, PROP_POLL_STATUS_FILENAME));
-		if(!csv.exists())
+		if(!csv.exists()){
+			cleanFolder(parent);
 			throw new IOException("The status file doesn't exists! I can't know if the csv file contains right data.");
+		}
 		return csv;
 	}
 	
@@ -149,34 +150,23 @@ public class GetVotesFromCSVJob implements StatefulJob {
 	
 	private List<Contentlet> getVotesToCheckin(List<String> votesString) throws DotDataException, DotSecurityException {
 		List<Contentlet> votesToCheckin = new ArrayList<Contentlet>();
-
 		for(String voteString:votesString){
 			String[] voteArr = voteString.split("[|]");
 			try{
-				Contentlet con = conAPI.findContentletByIdentifier(voteArr[0], true, Long.parseLong(voteArr[4]), userAPI.getSystemUser(), true);
-				if(null==con){
-					Contentlet vote = new Contentlet();
-					vote.setIdentifier(voteArr[0]);
-					vote.setStructureInode(StructureCache.getStructureByVelocityVarName(VOTE_STRUCTURE_NAME).getInode());
-					vote.setStringProperty("poll", voteArr[1]);
-					vote.setStringProperty("choice", voteArr[2]);
-					vote.setStringProperty("user", voteArr[3]);
-					vote.setLanguageId(Long.parseLong(voteArr[4]));
-					votesToCheckin.add(vote);
-				}else
-					Logger.info(this, "The Vote identified by " + voteArr[0] + " already exists. Leave it as is.");
-			}catch(DotContentletStateException e){
-				// the contentlet doesn't exists
-				Contentlet vote = new Contentlet();
-				vote.setIdentifier(voteArr[0]);
+				Contentlet vote = new Contentlet();					
 				vote.setStructureInode(StructureCache.getStructureByVelocityVarName(VOTE_STRUCTURE_NAME).getInode());
 				vote.setStringProperty("poll", voteArr[1]);
 				vote.setStringProperty("choice", voteArr[2]);
 				vote.setStringProperty("user", voteArr[3]);
+				vote.setBoolProperty("sent_to_sender", true);
 				vote.setLanguageId(Long.parseLong(voteArr[4]));
 				votesToCheckin.add(vote);
+			}catch(DotContentletStateException e){
+				Logger.error(this, e.getMessage(), e);
 			}
+			
 		}
+
 		return votesToCheckin;
 	}
 }

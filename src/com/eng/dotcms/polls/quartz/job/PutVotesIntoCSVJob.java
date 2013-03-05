@@ -22,7 +22,6 @@ import org.quartz.StatefulJob;
 
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.UserAPI;
-import com.dotmarketing.cache.StructureCache;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.plugin.business.PluginAPI;
@@ -68,9 +67,16 @@ public class PutVotesIntoCSVJob implements StatefulJob {
 						
 			// load all the votes
 			Logger.debug(this, "2. Load all the votes...");
-			List<Contentlet> votes = conAPI.findByStructure(StructureCache.getStructureByVelocityVarName(VOTE_STRUCTURE_NAME), userAPI.getSystemUser(), true, 0, 0);
-			Logger.debug(this, "2. ...number of votes: " + votes.size());
+			StringBuffer luceneQuery = new StringBuffer();
+			luceneQuery.append("+structureName:");
+			luceneQuery.append(VOTE_STRUCTURE_NAME);
+			luceneQuery.append(" +");
+			luceneQuery.append(VOTE_STRUCTURE_NAME);
+			luceneQuery.append(".sent_to_sender:0");
+			luceneQuery.append(" +live:true");
 			
+			List<Contentlet> votes = conAPI.search(luceneQuery.toString(), 0, 0, null, userAPI.getSystemUser(), true);
+			Logger.debug(this, "2. ...number of votes: " + votes.size());
 			if(votes.size()>0){
 				// lock the file: write in no append mode into the status file.
 				lock(destinationFolder);
@@ -86,6 +92,10 @@ public class PutVotesIntoCSVJob implements StatefulJob {
 					if(i<votes.size()-1)
 						fos.write("\n".getBytes());
 					i++;
+					vote.setBoolProperty("sent_to_sender", true);
+					vote.setInode("");
+					vote = conAPI.checkin(vote, userAPI.getSystemUser(), true);
+					conAPI.publish(vote, userAPI.getSystemUser(), true);
 				}
 				fos.flush();
 				Logger.debug(this, "3. Write successful.");
@@ -189,6 +199,4 @@ public class PutVotesIntoCSVJob implements StatefulJob {
 		csvVote.append(vote.getLanguageId());
 		return csvVote;				
 	}
-	
-	
 }	

@@ -82,8 +82,10 @@ public class PollsUtil {
 		aField.setVelocityVarName(name.toLowerCase().replaceAll(" ", "_"));
 		aField.setStructureInode(structureInode);
 		aField.setListed(listed);
-		if(DataType.BOOL.equals(dataType))
+		if(DataType.BOOL.equals(dataType)){
 			aField.setValues("True|1\nFalse|0");
+			aField.setDefaultValue("0");
+		}
 		aField.setFieldContentlet(FieldFactory.getNextAvaliableFieldNumber(dataType.toString(), "", structureInode));
 		FieldFactory.saveField(aField);
 		FieldsCache.removeField(aField);
