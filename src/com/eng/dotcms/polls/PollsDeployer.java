@@ -137,15 +137,17 @@ public class PollsDeployer extends PluginDeployer {
 	
 	private void scheduleJobs() throws SchedulerException, ParseException, ClassNotFoundException, DotDataException {
 				
-		//scheduled expired job
-		String jobName = pluginAPI.loadProperty(PLUGIN_ID, PROP_EXPIRED_JOB_NAME);
-		String jobGroup = pluginAPI.loadProperty(PLUGIN_ID, PROP_POLLS_JOB_GROUP);
-		String jobDescription = pluginAPI.loadProperty(PLUGIN_ID, PROP_EXPIRED_JOB_DESCRIPTION);
-		String javaClassname = pluginAPI.loadProperty(PLUGIN_ID, PROP_EXPIRED_JOB_CLASS);
-		String cronExpression = pluginAPI.loadProperty(PLUGIN_ID, PROP_EXPIRED_JOB_CRON_EXP);
-		CronScheduledTask cronScheduledTask = new CronScheduledTask(jobName, jobGroup, jobDescription, javaClassname, new Date(), null, CronTrigger.MISFIRE_INSTRUCTION_FIRE_ONCE_NOW, new HashMap<String, Object>(), cronExpression);
-		QuartzUtils.scheduleTask(cronScheduledTask);
-		
+		//scheduled expired job (if enable)
+		String enableExpiredJob = pluginAPI.loadProperty(PLUGIN_ID, PROP_ENABLE_EXPIRED_JOB);
+		if(Boolean.parseBoolean(enableExpiredJob)){
+			String jobName = pluginAPI.loadProperty(PLUGIN_ID, PROP_EXPIRED_JOB_NAME);
+			String jobGroup = pluginAPI.loadProperty(PLUGIN_ID, PROP_POLLS_JOB_GROUP);
+			String jobDescription = pluginAPI.loadProperty(PLUGIN_ID, PROP_EXPIRED_JOB_DESCRIPTION);
+			String javaClassname = pluginAPI.loadProperty(PLUGIN_ID, PROP_EXPIRED_JOB_CLASS);
+			String cronExpression = pluginAPI.loadProperty(PLUGIN_ID, PROP_EXPIRED_JOB_CRON_EXP);
+			CronScheduledTask cronScheduledTask = new CronScheduledTask(jobName, jobGroup, jobDescription, javaClassname, new Date(), null, CronTrigger.MISFIRE_INSTRUCTION_FIRE_ONCE_NOW, new HashMap<String, Object>(), cronExpression);
+			QuartzUtils.scheduleTask(cronScheduledTask);
+		}
 		//scheduled put csv job (if enable)
 		String enablePutCSV = pluginAPI.loadProperty(PLUGIN_ID, PROP_ENABLE_PUT_CSV_JOB);
 		if(Boolean.parseBoolean(enablePutCSV)){

@@ -13,9 +13,12 @@ public class PollsConstants {
 	public static final String PROP_POLL_STATUS_FILENAME					=	"quartz.csv.status.filename";
 	public static final String PROP_POLL_STATUS_BUSY						=	"quartz.csv.status.busy";
 	public static final String PROP_POLL_STATUS_FREE						=	"quartz.csv.status.free";
+	public static final String PROP_REMOTE_ENABLED							=	"plugin.remote.enabled";
+	
 	
 	
 	// scheduled jobs
+	public static final String PROP_ENABLE_EXPIRED_JOB						= 	"quartz.expired.job.enable";
 	public static final String PROP_EXPIRED_JOB_NAME	 					= 	"quartz.expired.job.name";
 	public static final String PROP_EXPIRED_JOB_DESCRIPTION					= 	"quartz.expired.job.description";
 	public static final String PROP_EXPIRED_JOB_CLASS						= 	"quartz.expired.job.java.classname";
