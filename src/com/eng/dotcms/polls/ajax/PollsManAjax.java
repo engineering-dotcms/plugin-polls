@@ -14,6 +14,27 @@ import com.eng.dotcms.polls.util.PollsUtil;
 import com.liferay.counter.ejb.CounterManagerUtil;
 import com.liferay.portal.model.User;
 
+/**
+ * Ajax / dwr class used in frontend macro for insert a new vote if the current user into the current session has not yet votes.
+ * 
+ * This file is part of Poll Management for dotCMS.
+ * Poll Management for dotCMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Poll Management for dotCMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Poll Management for dotCMS.  If not, see <http://www.gnu.org/licenses/> 
+ * 
+ * @author Graziano Aliberti - Engineering Ingegneria Informatica S.p.a
+ *
+ * Mar 7, 2013 - 4:20:00 PM
+ */
 public class PollsManAjax {
 		
 	public PollsManAjax.VoteResult vote(String pollTitle, String pollIdentifier, String choiceIdentifier, boolean showVotes) {

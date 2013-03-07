@@ -30,6 +30,28 @@ import com.dotmarketing.portlets.categories.model.Category;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
 import com.dotmarketing.util.Logger;
 
+/**
+ * Check and update all the expired polls. If the plugin is deployed into a remote environment (there are configured endpoints) it tries to 
+ * publish directly if the current expired poll exists on the receivers.
+ * 
+ * This file is part of Poll Management for dotCMS.
+ * Poll Management for dotCMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Poll Management for dotCMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Poll Management for dotCMS.  If not, see <http://www.gnu.org/licenses/>  
+ * 
+ * @author Graziano Aliberti - Engineering Ingegneria Informatica S.p.a
+ *
+ * Mar 7, 2013 - 4:22:12 PM
+ */
 public class ExpiredPollsJob implements StatefulJob {
 	
 	private PluginAPI pluginAPI = APILocator.getPluginAPI();

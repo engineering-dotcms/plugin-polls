@@ -28,6 +28,25 @@ import com.eng.dotcms.polls.quartz.job.util.PollsVotesFilenameFilter;
 import static com.eng.dotcms.polls.util.PollsConstants.*;
 
 /**
+ * Get votes from a CSV file and import into the system. This job can be disabled by plugin configuration and can be enabled only if 
+ * the plugin is deployed into a remote environment (there are configured endpoints).
+ * 
+ * The usage of this mechanism make sense only if, by specific requirements, the receiver servers are only in frontend mode and all the 
+ * activity are doing from the sender servers. 
+ * 
+ * This file is part of Poll Management for dotCMS.
+ * Poll Management for dotCMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Poll Management for dotCMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Poll Management for dotCMS.  If not, see <http://www.gnu.org/licenses/>  
  * 
  * @author Graziano Aliberti - Engineering Ingegneria Informatica S.p.a
  *
