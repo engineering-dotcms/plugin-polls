@@ -70,7 +70,7 @@ public class PollsAjaxAction extends AjaxAction {
                 mm.put("title", poll.getTitle());
                 mm.put("languageId", String.valueOf(poll.getLanguageId()));
                 mm.put("question", (String)poll.getMap().get("question"));
-                mm.put("date", df.format(poll.getModDate()));
+                mm.put("date", df.format((Date)poll.getMap().get("expiration_date")));
                 mm.put("expired", (String)poll.getMap().get("expired"));
                 mm.put("user", modUser.getFullName()+"<"+modUser.getEmailAddress()+">");
                 list.add(mm);
@@ -93,7 +93,7 @@ public class PollsAjaxAction extends AjaxAction {
 		try {        	
 			String language = (String) request.getSession().getAttribute(com.dotmarketing.util.WebKeys.HTMLPAGE_LANGUAGE);
 			User user = WebAPILocator.getUserWebAPI().getLoggedInUser(request);
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd 'T'hh:mm:ss");
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd 'T'HH:mm:ss");
 			String expireDate = request.getParameter("pollExpireDate");
 			String expireTime = request.getParameter("pollExpireTime");
 			Date expirationDate =  sdf.parse(expireDate + " " + expireTime);

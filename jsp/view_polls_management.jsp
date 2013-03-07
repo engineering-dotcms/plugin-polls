@@ -1,3 +1,5 @@
+<%@page import="com.eng.dotcms.polls.util.PollsConstants"%>
+<%@page import="com.dotmarketing.plugin.business.PluginAPI"%>
 <%@page import="com.dotmarketing.business.APILocator"%>
 <%@page import="com.dotmarketing.business.Layout"%>
 <%@page import="java.util.List"%>
@@ -36,7 +38,16 @@ int pageNumber=1;
 if(request.getParameter("pageNumber")!=null) 
     pageNumber=Integer.parseInt(request.getParameter("pageNumber"));
 
+// aggiunta del tasto per la pubblicazione remota di un sondaggio
+PluginAPI pluginAPI = APILocator.getPluginAPI();
+boolean remoteMode = Boolean.parseBoolean(pluginAPI.loadProperty(PollsConstants.PLUGIN_ID, PollsConstants.PROP_REMOTE_ENABLED));
+
 %>
+
+dojo.require("dotcms.dojo.push.PushHandler");
+
+var pushHandler = new dotcms.dojo.push.PushHandler('<%=LanguageUtil.get(pageContext, "Remote-Publish")%>');
+
 function movePage(x) {
 	var cp=parseInt(dojo.byId('currentPage').textContent);
 	dojo.byId('currentPage').textContent=cp+x;
@@ -131,7 +142,7 @@ function loadTable() {
 				var title=data.list[i].title;
 				var question=data.list[i].question;
 				var moduser=data.list[i].user;
-				var moddate=data.list[i].date;
+				var expdate=data.list[i].date;
 				var expired=data.list[i].expired;
 				var languageId=data.list[i].languageId;
 				
@@ -139,19 +150,27 @@ function loadTable() {
 					var row="<tr class=\"expiredPoll\">"+
 					  "<td style=\"width: 5%\"><strong><%=LanguageUtil.get(pageContext, "Expired")%></strong></td>"+	
 					  "<td style=\"width: 15%\">"+title+"</td>"+
-			          "<td style=\"width: 55%\">"+question+"</td>"+
-			          "<td style=\"width: 10%\">"+moduser+"</td>"+
-			          "<td style=\"width: 13%\">"+moddate+"</td>"+
-			          "<td style=\"width: 2%\"><a style=\"cursor: pointer\" onclick=\"goToViewPollVotes('"+identifier+"','"+languageId+"')\" title=\"<%=LanguageUtil.get(pageContext,"view-poll-votes")%>\"><span class='previewIcon'></span></a></td>"+
+			          "<td style=\"width: 61%\">"+question+"</td>"+
+			          "<td style=\"width: 12%\">"+expdate+"</td>"+
+			          "<td style=\"width: 7%\"><a style=\"cursor: pointer\" onclick=\"goToViewPollVotes('"+identifier+"','"+languageId+"')\" title=\"<%=LanguageUtil.get(pageContext,"view-poll-votes")%>\"><span class='previewIcon'></span></a></td>"+
 			         "</tr>";					
 				}else{
 					var row="<tr>"+ 
 					  "<td style=\"width: 5%\"></td>"+
 			          "<td style=\"width: 15%\">"+title+"</td>"+
-			          "<td style=\"width: 55%\">"+question+"</td>"+
-			          "<td style=\"width: 10%\">"+moduser+"</td>"+
-			          "<td style=\"width: 13%\">"+moddate+"</td>"+
-			          "<td style=\"width: 2%\"><a style=\"cursor: pointer\" onclick=\"goToViewPollVotes('"+identifier+"','"+languageId+"')\" title=\"<%=LanguageUtil.get(pageContext,"view-poll-votes")%>\"><span class='previewIcon'></span></a></td>"+
+			          "<td style=\"width: 61%\">"+question+"</td>"+
+			          "<td style=\"width: 12%\">"+expdate+"</td>"+
+			          <%
+			          	if(!remoteMode){
+			          %>
+			          "<td style=\"width: 7%\"><a style=\"cursor: pointer\" onclick=\"goToViewPollVotes('"+identifier+"','"+languageId+"')\" title=\"<%=LanguageUtil.get(pageContext,"view-poll-votes")%>\"><span class='previewIcon'></span></a></td>"+
+			          <%
+			          	}else{
+			          %>
+			          "<td style=\"width: 7%\"><a style=\"cursor: pointer\" onclick=\"goToViewPollVotes('"+identifier+"','"+languageId+"')\" title=\"<%=LanguageUtil.get(pageContext,"view-poll-votes")%>\"><span class='previewIcon'></span></a>&nbsp;&nbsp;&nbsp;<a style=\"cursor: pointer\" onclick=\"remotePollPublish('"+identifier+"')\" title=\"<%=LanguageUtil.get(pageContext,"Remote-Publish")%>\"><span class='pushIcon'></span></a></td>"+
+			          <%
+			          	}
+			          %>
 			         "</tr>";					
 				}
 				dojo.place(dojo.toDom(row),'table_body');				
@@ -173,6 +192,10 @@ function resized() {
     dojo.style(e, "height", viewport_height -150+ "px");
     
     dijit.byId("borderContainer").resize();
+}
+
+function remotePollPublish(pollIdentifier) {
+	pushHandler.showDialog(pollIdentifier);
 }
 
 dojo.ready(function(){
@@ -207,10 +230,10 @@ dojo.ready(function(){
                     <tr>
                     	<th style="width: 5%"><%=LanguageUtil.get(pageContext, "Status")%></th>
                         <th style="width: 15%"><%=LanguageUtil.get(pageContext, "Title")%></th>
-                        <th style="width: 55%"><%=LanguageUtil.get(pageContext, "Question")%></th>
-                        <th style="width: 10%"><%=LanguageUtil.get(pageContext, "Mod-User")%></th>                         
-                        <th style="width: 13%"><%=LanguageUtil.get(pageContext, "Mod-Data")%></th>
-                        <th style="width: 2%"><%=LanguageUtil.get(pageContext, "Action")%></th>                       
+                        <th style="width: 61%"><%=LanguageUtil.get(pageContext, "Question")%></th>
+                        <th style="width: 12%"><%=LanguageUtil.get(pageContext, "Expiration-Date")%></th>                        
+                        <th style="width: 7%"><%=LanguageUtil.get(pageContext, "Action")%></th>
+                                               
                     </tr>
                 </thead>
                 <tbody id="table_body">
@@ -233,3 +256,12 @@ dojo.ready(function(){
         </div>
     </div>
 </div>
+
+<form id="remotePublishForm">
+	<input name="assetIdentifier" id="assetIdentifier" type="hidden" value="">
+	<input name="remotePublishDate" id="remotePublishDate" type="hidden" value="">
+	<input name="remotePublishTime" id="remotePublishTime" type="hidden" value="">
+	<input name="remotePublishExpireDate" id="remotePublishExpireDate" type="hidden" value="">
+	<input name="remotePublishExpireTime" id="remotePublishExpireTime" type="hidden" value="">
+	<input name="remotePublishNeverExpire" id="remotePublishNeverExpire" type="hidden" value="">
+</form>
