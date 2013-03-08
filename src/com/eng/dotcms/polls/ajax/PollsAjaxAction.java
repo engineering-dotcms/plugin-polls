@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
+import com.dotmarketing.beans.Host;
 import com.dotmarketing.beans.Permission;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.web.WebAPILocator;
@@ -82,7 +83,18 @@ public class PollsAjaxAction extends AjaxAction {
         List<Map> list=new ArrayList<Map>();
         SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd hh:mm");
         try {
-        	List<Contentlet> polls = APILocator.getContentletAPI().findByStructure(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME), WebAPILocator.getUserWebAPI().getLoggedInUser(request), false, pageSize, offset);
+        	String language = (String) request.getSession().getAttribute(com.dotmarketing.util.WebKeys.HTMLPAGE_LANGUAGE);
+        	Host host = WebAPILocator.getHostWebAPI().getCurrentHost(request);
+        	StringBuffer luceneQuery = new StringBuffer();
+        	luceneQuery.append("+structureName:");
+        	luceneQuery.append(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME).getName());
+        	luceneQuery.append(" +conhost:");
+        	luceneQuery.append(host.getIdentifier());
+        	luceneQuery.append(" +languageId:");
+        	luceneQuery.append(language);
+        	luceneQuery.append(" +live:true");
+//        	List<Contentlet> polls = APILocator.getContentletAPI().findByStructure(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME), WebAPILocator.getUserWebAPI().getLoggedInUser(request), false, pageSize, offset);
+        	List<Contentlet> polls = APILocator.getContentletAPI().search(luceneQuery.toString(), pageSize, offset, null, WebAPILocator.getUserWebAPI().getLoggedInUser(request), true);
             for(Contentlet poll : polls) {
                 User modUser=APILocator.getUserAPI().loadUserById(poll.getModUser());                
                 Map<String,String> mm=new HashMap<String,String>();
