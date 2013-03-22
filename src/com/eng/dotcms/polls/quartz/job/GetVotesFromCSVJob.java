@@ -99,13 +99,13 @@ public class GetVotesFromCSVJob implements StatefulJob {
 				Logger.info(this, "The Status is BUSY: EXIT...");
 			}			
 		} catch(IOException e){
-			Logger.error(this, "Error", e);
+			Logger.error(this, e.getMessage());
 		} catch (DotDataException e) {
-			Logger.error(this, "Error", e);
+			Logger.error(this, e.getMessage());
 		} catch (IllegalStateException e) {
-			Logger.error(this, "Error", e);
+			Logger.error(this, e.getMessage());
 		} catch (DotSecurityException e) {
-			Logger.error(this, "Error", e);
+			Logger.error(this, e.getMessage());
 		}
 	}
 	
