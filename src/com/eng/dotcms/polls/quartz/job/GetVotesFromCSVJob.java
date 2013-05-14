@@ -78,53 +78,60 @@ public class GetVotesFromCSVJob implements StatefulJob {
 			
 			// load the status file and read the status at this time
 			File statusFile = getStatusFile(sourceFolder);
-			String status = getStatus(statusFile);
-			
-			if(pluginAPI.loadProperty(PLUGIN_ID, PROP_POLL_STATUS_FREE).equals(status)){
-				Logger.info(this, "The Status is FREE: I can read the CSV file...");
-				// get the votes to checkin
-				List<Contentlet> votes = getVotesToCheckin(getVotesFromCSV(getSourceFile(sourceFolder)));
-				List<Category> categories = APILocator.getCategoryAPI().findTopLevelCategories( APILocator.getUserAPI().getSystemUser(), false );
-				List<Permission> structurePermissions = APILocator.getPermissionAPI().getPermissions(StructureCache.getStructureByVelocityVarName(VOTE_STRUCTURE_NAME));
-				for(Contentlet vote:votes){
-					// validate and checkin...and publish
-					conAPI.validateContentlet(vote, categories);
-					vote = conAPI.checkin(vote, categories, structurePermissions, userAPI.getSystemUser(), true);
-					conAPI.publish(vote, userAPI.getSystemUser(), true);
-				}
-				Logger.info(this, "The votes were inserted and published.");
-				if(cleanFolder(sourceFolder))
-					Logger.info(this, "The source folder is clean.");				
-			}else{
-				Logger.info(this, "The Status is BUSY: EXIT...");
-			}			
+			if(null!=statusFile){
+				String status = getStatus(statusFile);
+				
+				if(pluginAPI.loadProperty(PLUGIN_ID, PROP_POLL_STATUS_FREE).equals(status)){
+					Logger.info(this, "The Status is FREE: I can read the CSV file...");
+					// get the votes to checkin
+					File sourceFile = getSourceFile(sourceFolder);
+					if(null!=sourceFile){
+						List<Contentlet> votes = getVotesToCheckin(getVotesFromCSV(sourceFile));
+						List<Category> categories = APILocator.getCategoryAPI().findTopLevelCategories( APILocator.getUserAPI().getSystemUser(), false );
+						List<Permission> structurePermissions = APILocator.getPermissionAPI().getPermissions(StructureCache.getStructureByVelocityVarName(VOTE_STRUCTURE_NAME));
+						for(Contentlet vote:votes){
+							// validate and checkin...and publish
+							conAPI.validateContentlet(vote, categories);
+							vote = conAPI.checkin(vote, categories, structurePermissions, userAPI.getSystemUser(), true);
+							conAPI.publish(vote, userAPI.getSystemUser(), true);
+						}
+						Logger.info(this, "The votes were inserted and published.");
+						if(cleanFolder(sourceFolder))
+							Logger.info(this, "The source folder is clean.");
+					}
+				}else{
+					Logger.info(this, "The Status is BUSY: EXIT...");
+				}			
+			}
 		} catch(IOException e){
 			Logger.error(this, e.getMessage());
 		} catch (DotDataException e) {
-			Logger.error(this, e.getMessage());
-		} catch (IllegalStateException e) {
 			Logger.error(this, e.getMessage());
 		} catch (DotSecurityException e) {
 			Logger.error(this, e.getMessage());
 		}
 	}
 	
-	private File getSourceFile(File parent) throws IllegalStateException, DotDataException {
+	private File getSourceFile(File parent) throws DotDataException {
 		File[] csv = parent.listFiles(new PollsVotesFilenameFilter(pluginAPI.loadProperty(PLUGIN_ID, PROP_POLL_VOTES_FILENAME)));
 		if(csv.length==1)
 			return parent.listFiles(new PollsVotesFilenameFilter(pluginAPI.loadProperty(PLUGIN_ID, PROP_POLL_VOTES_FILENAME)))[0];
 		else if(csv.length>1){
 			cleanFolder(parent);
-			throw new IllegalStateException("Excepted 1 csv file, found: " + csv.length);
-		}else
-			throw new IllegalStateException("Excepted 1 csv file, found 0");
+			Logger.error(this,"Excepted 1 csv file, found: " + csv.length);
+			return null;
+		}else{
+			Logger.error(this,"Excepted 1 csv file, found 0");
+			return null;
+		}
 	}	
 	
-	private File getStatusFile(File parent) throws IOException, DotDataException {
+	private File getStatusFile(File parent) throws DotDataException {
 		File csv = new File(parent,pluginAPI.loadProperty(PLUGIN_ID, PROP_POLL_STATUS_FILENAME));
 		if(!csv.exists()){
 			cleanFolder(parent);
-			throw new IOException("The status file doesn't exists! I can't know if the csv file contains right data.");
+			Logger.error(this, "The status file doesn't exists! I can't know if the csv file contains right data.");
+			return null;
 		}
 		return csv;
 	}
@@ -140,9 +147,12 @@ public class GetVotesFromCSVJob implements StatefulJob {
 	
 	private boolean cleanFolder(File sourceFolder){
 		boolean ret = true;
-		File[] files = sourceFolder.listFiles();
+		File[] files = sourceFolder.listFiles();		
 		for(File f:files){
-			ret = f.delete();
+			if(f.isDirectory())
+				ret = cleanFolder(f);
+			else
+				ret = f.delete();
 		}
 		return ret;
 	}

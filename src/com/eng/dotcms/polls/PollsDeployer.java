@@ -17,7 +17,6 @@ import com.dotmarketing.cache.StructureCache;
 import com.dotmarketing.cms.content.submit.PluginDeployer;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.plugin.business.PluginAPI;
-import com.dotmarketing.portlets.contentlet.business.Contentlet;
 import com.dotmarketing.portlets.folders.model.Folder;
 import com.dotmarketing.portlets.structure.factories.RelationshipFactory;
 import com.dotmarketing.portlets.structure.model.Field.DataType;
@@ -111,8 +110,12 @@ public class PollsDeployer extends PluginDeployer {
 				PollsUtil.createField(pollVoteStructure.getInode(), "User", FieldType.TEXT, DataType.TEXT, true, false, false, true);				
 				// handle the vote back for remote publishing
 				PollsUtil.createField(pollVoteStructure.getInode(), "Sent to Sender", FieldType.RADIO, DataType.BOOL, true, true, false, false);
+				perAPI.permissionIndividually(APILocator.getHostAPI().find(pollVoteStructure.getHost(), 
+						APILocator.getUserAPI().getSystemUser(), false), 
+						pollVoteStructure, APILocator.getUserAPI().getSystemUser(), false);
+				for(Permission p : addAnonymousPermissions(pollVoteStructure))
+					perAPI.save(p, pollVoteStructure, APILocator.getUserAPI().getSystemUser(), false);
 				
-				perAPI.assignPermissions(addAnonymousPermissions(pollVoteStructure), pollVoteStructure, APILocator.getUserAPI().getSystemUser(), true);
 			}
 					
 			// scheduled all the configured jobs.
@@ -129,25 +132,19 @@ public class PollsDeployer extends PluginDeployer {
 	private List<Permission> addAnonymousPermissions(Structure pollVoteStructure) throws DotDataException {
 		List<Permission> votePermissions = new ArrayList<Permission>();
 		Permission cmsAnonPublish = new Permission();
-		cmsAnonPublish.setType(Contentlet.class.getCanonicalName());
 		cmsAnonPublish.setRoleId(APILocator.getRoleAPI().loadCMSAnonymousRole().getId());
 		cmsAnonPublish.setPermission(PermissionAPI.PERMISSION_PUBLISH);
-		cmsAnonPublish.setBitPermission(true);
-		cmsAnonPublish.setInode(pollVoteStructure.getPermissionId());
+		cmsAnonPublish.setInode(pollVoteStructure.getInode());
 		
 		Permission cmsAnonEdit = new Permission();
-		cmsAnonEdit.setType(Contentlet.class.getCanonicalName());
 		cmsAnonEdit.setRoleId(APILocator.getRoleAPI().loadCMSAnonymousRole().getId());
 		cmsAnonEdit.setPermission(PermissionAPI.PERMISSION_EDIT);
-		cmsAnonEdit.setBitPermission(true);
-		cmsAnonEdit.setInode(pollVoteStructure.getPermissionId());
+		cmsAnonEdit.setInode(pollVoteStructure.getInode());
 		
 		Permission cmsAnonUse = new Permission();
-		cmsAnonUse.setType(Contentlet.class.getCanonicalName());
 		cmsAnonUse.setRoleId(APILocator.getRoleAPI().loadCMSAnonymousRole().getId());
 		cmsAnonUse.setPermission(PermissionAPI.PERMISSION_USE);
-		cmsAnonUse.setBitPermission(true);
-		cmsAnonUse.setInode(pollVoteStructure.getPermissionId());
+		cmsAnonUse.setInode(pollVoteStructure.getInode());
 		votePermissions.add(cmsAnonUse);
 		votePermissions.add(cmsAnonEdit);
 		votePermissions.add(cmsAnonPublish);

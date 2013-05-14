@@ -146,7 +146,7 @@ public class PollsUtil {
 		aField.setStructureInode(structureInode);
 		aField.setListed(listed);
 		if(DataType.BOOL.equals(dataType)){
-			aField.setValues("True|1\nFalse|0");
+//			aField.setValues("True|1\nFalse|0");
 			aField.setDefaultValue("0");
 		}
 		aField.setFieldContentlet(FieldFactory.getNextAvaliableFieldNumber(dataType.toString(), "", structureInode));
