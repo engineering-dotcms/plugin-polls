@@ -18,6 +18,7 @@ import com.dotmarketing.cms.content.submit.PluginDeployer;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.plugin.business.PluginAPI;
 import com.dotmarketing.portlets.contentlet.business.Contentlet;
+import com.dotmarketing.portlets.folders.model.Folder;
 import com.dotmarketing.portlets.structure.factories.RelationshipFactory;
 import com.dotmarketing.portlets.structure.model.Field.DataType;
 import com.dotmarketing.portlets.structure.model.Field.FieldType;
@@ -26,6 +27,7 @@ import com.dotmarketing.portlets.structure.model.Structure;
 import com.dotmarketing.quartz.CronScheduledTask;
 import com.dotmarketing.quartz.QuartzUtils;
 import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.UtilMethods;
 import com.eng.dotcms.polls.util.PollsUtil;
 
 import static com.eng.dotcms.polls.util.PollsConstants.*;
@@ -59,26 +61,30 @@ public class PollsDeployer extends PluginDeployer {
 	@Override
 	public boolean deploy() {
 		try {
+			// get the default folder for structures and contentlets (this is immutable)
+			Folder pollPath = APILocator.getFolderAPI().findFolderByPath(pluginAPI.loadProperty(PLUGIN_ID, PROP_FOLDER_PATH), APILocator.getHostAPI().findDefaultHost(APILocator.getUserAPI().getSystemUser(), true), APILocator.getUserAPI().getSystemUser(), true);
+			if(!UtilMethods.isSet(pollPath.getInode()))
+				pollPath = APILocator.getFolderAPI().createFolders(pluginAPI.loadProperty(PLUGIN_ID, PROP_FOLDER_PATH), APILocator.getHostAPI().findDefaultHost(APILocator.getUserAPI().getSystemUser(), true), APILocator.getUserAPI().getSystemUser(), true);
 			if(Boolean.valueOf(pluginAPI.loadProperty(PLUGIN_ID, PROP_AUTO_CREATE_STRUCTURES))){
-				// create Poll Structure
+				// create Poll Structure								
 				if(!PollsUtil.existStructure(POLL_STRUCTURE_NAME)) {
 					Logger.info(PollsDeployer.class, "The Structure Polls must be created");
-					Structure pollStructure = PollsUtil.createStructure(POLL_STRUCTURE_NAME, POLL_STRUCTURE_NAME, APILocator.getHostAPI().findDefaultHost(APILocator.getUserAPI().getSystemUser(), true), Structure.STRUCTURE_TYPE_CONTENT);					
+					Structure pollStructure = PollsUtil.createStructure(POLL_STRUCTURE_NAME, POLL_STRUCTURE_NAME, pollPath, Structure.STRUCTURE_TYPE_CONTENT);					
 					// start field creation
 					PollsUtil.createField(pollStructure.getInode(), "Title", FieldType.TEXT, DataType.TEXT, true, true, true, true);
 					PollsUtil.createField(pollStructure.getInode(), "Question", FieldType.TEXT_AREA, DataType.LONG_TEXT, true, true, false, true);
 					PollsUtil.createField(pollStructure.getInode(), "Expiration Date", FieldType.DATE_TIME, DataType.DATE, true, true, false, false);
 					PollsUtil.createField(pollStructure.getInode(), "Expired", FieldType.TEXT, DataType.TEXT, true, true, false, false);
-					PollsUtil.createField(pollStructure.getInode(), "PollPath", FieldType.HOST_OR_FOLDER, DataType.TEXT, true, true, false, false);
+					PollsUtil.createField(pollStructure.getInode(), "PollPath", FieldType.HOST_OR_FOLDER, DataType.TEXT, true, false, false, false);
 				}
 				
 				// create PollChoice Structure
 				if(!PollsUtil.existStructure(CHOICE_STRUCTURE_NAME)) {
 					Logger.info(PollsDeployer.class, "The Structure PollsChoice must be created");
-					Structure pollChoiceStructure = PollsUtil.createStructure(CHOICE_STRUCTURE_NAME, CHOICE_STRUCTURE_NAME, APILocator.getHostAPI().findDefaultHost(APILocator.getUserAPI().getSystemUser(), true), Structure.STRUCTURE_TYPE_CONTENT);
+					Structure pollChoiceStructure = PollsUtil.createStructure(CHOICE_STRUCTURE_NAME, CHOICE_STRUCTURE_NAME, pollPath, Structure.STRUCTURE_TYPE_CONTENT);
 					PollsUtil.createField(pollChoiceStructure.getInode(), "Text", FieldType.TEXT, DataType.TEXT, true, true, false, true);
 					PollsUtil.createField(pollChoiceStructure.getInode(), "Id", FieldType.TEXT, DataType.TEXT, true, true, false, false);
-					PollsUtil.createField(pollChoiceStructure.getInode(), "ChoicePath", FieldType.HOST_OR_FOLDER, DataType.TEXT, true, true, false, false);
+					PollsUtil.createField(pollChoiceStructure.getInode(), "ChoicePath", FieldType.HOST_OR_FOLDER, DataType.TEXT, true, false, false, false);
 				}	
 				
 				// create relationship between the Poll structures
@@ -99,7 +105,7 @@ public class PollsDeployer extends PluginDeployer {
 			// create PollVote Structure
 			if(!PollsUtil.existStructure(VOTE_STRUCTURE_NAME)) {
 				Logger.info(PollsDeployer.class, "The Structure PollsVote must be created");
-				Structure pollVoteStructure = PollsUtil.createStructure(VOTE_STRUCTURE_NAME, VOTE_STRUCTURE_NAME, APILocator.getHostAPI().findDefaultHost(APILocator.getUserAPI().getSystemUser(), true), Structure.STRUCTURE_TYPE_CONTENT);
+				Structure pollVoteStructure = PollsUtil.createStructure(VOTE_STRUCTURE_NAME, VOTE_STRUCTURE_NAME, pollPath, Structure.STRUCTURE_TYPE_CONTENT);
 				PollsUtil.createField(pollVoteStructure.getInode(), "Poll", FieldType.TEXT, DataType.TEXT, true, true, false, true);
 				PollsUtil.createField(pollVoteStructure.getInode(), "Choice", FieldType.TEXT, DataType.TEXT, true, true, false, true);
 				PollsUtil.createField(pollVoteStructure.getInode(), "User", FieldType.TEXT, DataType.TEXT, true, false, false, true);				

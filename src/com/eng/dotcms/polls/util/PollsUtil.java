@@ -11,6 +11,7 @@ import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotHibernateException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
+import com.dotmarketing.portlets.folders.model.Folder;
 import com.dotmarketing.portlets.languagesmanager.business.LanguageAPI;
 import com.dotmarketing.portlets.languagesmanager.model.Language;
 import com.dotmarketing.portlets.structure.factories.FieldFactory;
@@ -89,6 +90,44 @@ public class PollsUtil {
 		StructureCache.addStructure(aStructure);
 		return aStructure;
 	}
+
+	public static Structure createStructure(String name, String description, Folder folder, int type) throws DotDataException, DotSecurityException {
+		Structure aStructure = new Structure();
+		aStructure.setName(name);
+		aStructure.setHost(APILocator.getHostAPI().findDefaultHost(APILocator.getUserAPI().getSystemUser(), false).getIdentifier());
+		aStructure.setFolder(folder.getInode());
+		aStructure.setDescription(description);
+		aStructure.setStructureType(type);
+		String structureVelocityName = VelocityUtil.convertToVelocityVariable(aStructure.getName(), true);
+		List<String> velocityvarnames = StructureFactory.getAllVelocityVariablesNames();
+		int found = 0;
+		if (VelocityUtil.isNotAllowedVelocityVariableName(structureVelocityName)) {
+			found++;
+		}
+
+		for (String velvar : velocityvarnames) {
+			if (velvar != null) {
+				if (structureVelocityName.equalsIgnoreCase(velvar)) {
+					found++;
+				} else if (velvar.toLowerCase().contains(structureVelocityName.toLowerCase())) {
+					String number = velvar.substring(structureVelocityName.length());
+					if (RegEX.contains(number, "^[0-9]+$")) {
+						found++;
+					}
+				}
+			}
+		}
+		if (found > 0) {
+			structureVelocityName = structureVelocityName + Integer.toString(found);
+		}
+		aStructure.setVelocityVarName(structureVelocityName);
+		
+		StructureFactory.saveStructure(aStructure);
+		StructureCache.removeStructure(aStructure);
+		StructureCache.addStructure(aStructure);
+		return aStructure;
+	}
+
 	
 	/**
 	 * Create a generic Field

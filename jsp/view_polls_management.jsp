@@ -21,6 +21,7 @@
 
 -->
 
+<%@page import="com.dotmarketing.portlets.languagesmanager.model.Language"%>
 <%@page import="com.eng.dotcms.polls.util.PollsConstants"%>
 <%@page import="com.dotmarketing.plugin.business.PluginAPI"%>
 <%@page import="com.dotmarketing.business.APILocator"%>
@@ -65,10 +66,13 @@ if(request.getParameter("pageNumber")!=null)
 PluginAPI pluginAPI = APILocator.getPluginAPI();
 boolean remoteMode = Boolean.parseBoolean(pluginAPI.loadProperty(PollsConstants.PLUGIN_ID, PollsConstants.PROP_REMOTE_ENABLED));
 
+List<Language> languages = APILocator.getLanguageAPI().getLanguages();
+
+Language defaultLang = APILocator.getLanguageAPI().getDefaultLanguage();
+String languageId = String.valueOf(defaultLang.getId());
 %>
 
 dojo.require("dotcms.dojo.push.PushHandler");
-
 var pushHandler = new dotcms.dojo.push.PushHandler('<%=LanguageUtil.get(pageContext, "Remote-Publish")%>');
 
 function movePage(x) {
@@ -100,12 +104,13 @@ function disableButtons(x) {
 }
 
 function goToAddPoll(){
+	var el = dijit.byId('language_id');
 	var dialog = new dijit.Dialog({
 		id: 'addPoll',
         title: "<%= LanguageUtil.get(pageContext, "add-poll")%>",
         style: "width: 800px; ",
         content: new dojox.layout.ContentPane({
-            href: "/html/plugins/com.eng.dotcms.polls/add_polls.jsp"
+            href: "/html/plugins/com.eng.dotcms.polls/add_polls.jsp?el="+el
         }),
         onHide: function() {
         	var dialog=this;
@@ -150,6 +155,7 @@ function backToPollsList(id, reload){
 }
 
 function loadTable() {
+	var el = dijit.byId('language_id');
 	var currentUser="<%=user.getUserId()%>";
 	var lid="<%=contentLayout%>";
 	var lidBL="<%=layout.getId()%>";	
@@ -157,9 +163,10 @@ function loadTable() {
 	var pageSize=10;
 	var page=(parseInt(dojo.byId('currentPage').textContent)-1)*pageSize;
 	dojo.xhr('GET',{
-		url:'/DotAjaxDirector/com.eng.dotcms.polls.ajax.PollsAjaxAction/cmd/getPolls/offset/'+page+'/pageSize/'+pageSize,
+		url:'/DotAjaxDirector/com.eng.dotcms.polls.ajax.PollsAjaxAction/cmd/getPolls/offset/'+page+'/pageSize/'+pageSize+'/el/'+el,
 		handleAs: 'json',
 		load: function(data) {
+			dojo.empty('table_body');
 			for(var i=0;i<data.list.length;i++) {
 				var identifier=data.list[i].identifier;
 				var title=data.list[i].title;
@@ -168,11 +175,11 @@ function loadTable() {
 				var expdate=data.list[i].date;
 				var expired=data.list[i].expired;
 				var languageId=data.list[i].languageId;
-				
+				var flag=data.list[i].flag;
 				if(expired=="true"){
 					var row="<tr class=\"expiredPoll\">"+
 					  "<td style=\"width: 5%\"><strong><%=LanguageUtil.get(pageContext, "Expired")%></strong></td>"+	
-					  "<td style=\"width: 15%\">"+title+"</td>"+
+					  "<td style=\"width: 15%\"><img src=\""+flag+"\" alt=\"flag\" />&nbsp;&nbsp;"+title+"</td>"+
 			          "<td style=\"width: 61%\">"+question+"</td>"+
 			          "<td style=\"width: 12%\">"+expdate+"</td>"+
 			          "<td style=\"width: 7%\"><a style=\"cursor: pointer\" onclick=\"goToViewPollVotes('"+identifier+"','"+languageId+"')\" title=\"<%=LanguageUtil.get(pageContext,"view-poll-votes")%>\"><span class='previewIcon'></span></a></td>"+
@@ -180,7 +187,7 @@ function loadTable() {
 				}else{
 					var row="<tr>"+ 
 					  "<td style=\"width: 5%\"></td>"+
-			          "<td style=\"width: 15%\">"+title+"</td>"+
+					  "<td style=\"width: 15%\"><img src=\""+flag+"\" alt=\"flag\" />&nbsp;&nbsp;"+title+"</td>"+
 			          "<td style=\"width: 61%\">"+question+"</td>"+
 			          "<td style=\"width: 12%\">"+expdate+"</td>"+
 			          <%
@@ -240,12 +247,86 @@ dojo.ready(function(){
 	<div id="brokenLinkMain">
         <div id="borderContainer" dojoType="dijit.layout.BorderContainer" style="width:100%;">
             <div dojoType="dijit.layout.ContentPane" region="top">
-              <span id="tools">
+              <div id="tools">
+              <span style="float: left">
+					<dl>
+                			<%if (languages.size() > 1) { %>
+                                                <dt><%= LanguageUtil.get(pageContext, "Language") %>:</dt>
+                                                <dd>
+                                                    <div id="combo_zone2" style="width:215px; height:20px;">
+                                                        <input id="language_id"/>
+                                                    </div>
+                                                    <script>
+														<%StringBuffer buff = new StringBuffer();
+														  // http://jira.dotmarketing.net/browse/DOTCMS-6148
+														  buff.append("{identifier:'id',imageurl:'imageurl',label:'label',items:[");
+
+														  String imageURL="/html/images/languages/all.gif";
+														  String style="background-image:url(URLHERE);width:16px;height:11px;display:inline-block;vertical-align:middle;margin:3px 5px 3px 2px;";
+														  buff.append("{id:'0',value:'',lang:'All',imageurl:'"+imageURL+"',label:'<span style=\""+style.replaceAll("URLHERE",imageURL)+"\"></span>All'}");
+														  for (Language lang : languages) {
+															  imageURL="/html/images/languages/" + lang.getLanguageCode()  + "_" + lang.getCountryCode() +".gif";
+															  final String display=lang.getLanguage() + " - " + lang.getCountry().trim();
+															  buff.append(",{id:'"+lang.getId()+"',");
+															  buff.append("value:'"+lang.getId()+"',");
+															  buff.append("imageurl:'"+imageURL+"',");
+															  buff.append("lang:'"+display+"',");
+															  buff.append("label:'<span style=\""+style.replaceAll("URLHERE",imageURL)+"\"></span>"+display+"'}");
+														  }
+														  buff.append("]}");%>
+
+														function updateSelectBoxImage(myselect) {
+															var imagestyle = "url('" + myselect.item.imageurl + "')";
+															var selField = dojo.query('#combo_zone2 div.dijitInputField')[0];
+															dojo.style(selField, "backgroundImage", imagestyle);
+															dojo.style(selField, "backgroundRepeat", "no-repeat");
+															dojo.style(selField, "padding", "0px 0px 0px 25px");
+															dojo.style(selField, "backgroundColor", "transparent");
+															dojo.style(selField, "backgroundPosition", "3px 6px");
+														}
+
+															var storeData=<%=buff.toString()%>;
+															var langStore = new dojo.data.ItemFileReadStore({data: storeData});
+															var myselect = new dijit.form.FilteringSelect({
+																	 id: "language_id",
+																	 name: "language_id",
+																	 value: '',
+																	 required: true,
+																	 store: langStore,
+																	 searchAttr: "lang",
+																	 labelAttr: "label",
+																	 labelType: "html",
+																	 onChange: function() {
+																		 var el=dijit.byId('language_id');
+																		 updateSelectBoxImage(el);
+																		 loadTable();
+																	 },
+																	 labelFunc: function(item, store) { return store.getValue(item, "label"); }
+																},
+																dojo.byId("language_id"));
+
+																<%if(languageId.equals("0")) {%>
+																	myselect.setValue('<%=languages.get(0).getId()%>');
+																<%} else {%>
+																	myselect.setValue('<%=languageId%>');
+																<%}%>
+
+													</script>
+                                                </dd>
+                                        <%} else { %>
+                                                <% long langId = languages.get(0).getId(); %>
+                                                <input type="hidden" name="language_id" id="language_id" value="<%= langId %>">
+                                        <% } %>
+                                        </dl>  
+                 </span>                    
+                <span style="float: right; margin-top: 0.5%; margin-right: 47%">                                
                 <button id="addPollBtn" type="button" dojoType="dijit.form.Button" onClick="goToAddPoll()">
                    <span class="plusIcon"></span>
                    <%=LanguageUtil.get(pageContext,"add-poll")%>
                 </button>
-              </span>
+                </span>                
+              </div>
+              <div class="clear"></div>
             </div>
             <div dojoType="dijit.layout.ContentPane" region="center">
                 <table id="links_table" class="listingTable" border=1>

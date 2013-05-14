@@ -23,7 +23,9 @@ import com.dotmarketing.business.web.WebAPILocator;
 import com.dotmarketing.cache.StructureCache;
 import com.dotmarketing.portlets.categories.model.Category;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
+import com.dotmarketing.portlets.languagesmanager.model.Language;
 import com.dotmarketing.portlets.structure.factories.RelationshipFactory;
+import com.dotmarketing.portlets.structure.model.Structure;
 import com.dotmarketing.servlets.ajax.AjaxAction;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
@@ -78,24 +80,29 @@ public class PollsAjaxAction extends AjaxAction {
         Map<String,String> pmap=getURIParams();
         int offset=Integer.parseInt(pmap.get("offset"));
         int pageSize=Integer.parseInt(pmap.get("pageSize"));
+        String language = pmap.get("el");
         
         Map<String,Object> result=new HashMap<String,Object>();
         List<Map> list=new ArrayList<Map>();
         SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd hh:mm");
         try {
-        	String language = (String) request.getSession().getAttribute(com.dotmarketing.util.WebKeys.HTMLPAGE_LANGUAGE);
+        	if(null==language)
+        		language = (String) request.getSession().getAttribute(com.dotmarketing.util.WebKeys.HTMLPAGE_LANGUAGE);
         	Host host = WebAPILocator.getHostWebAPI().getCurrentHost(request);
         	StringBuffer luceneQuery = new StringBuffer();
         	luceneQuery.append("+structureName:");
         	luceneQuery.append(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME).getName());
         	luceneQuery.append(" +conhost:");
         	luceneQuery.append(host.getIdentifier());
-        	luceneQuery.append(" +languageId:");
-        	luceneQuery.append(language);
+        	if(!"0".equals(language)){
+	        	luceneQuery.append(" +languageId:");
+	        	luceneQuery.append(language);
+        	}
         	luceneQuery.append(" +live:true");
 //        	List<Contentlet> polls = APILocator.getContentletAPI().findByStructure(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME), WebAPILocator.getUserWebAPI().getLoggedInUser(request), false, pageSize, offset);
         	List<Contentlet> polls = APILocator.getContentletAPI().search(luceneQuery.toString(), pageSize, offset, null, WebAPILocator.getUserWebAPI().getLoggedInUser(request), true);
             for(Contentlet poll : polls) {
+            	Language lang = APILocator.getLanguageAPI().getLanguage(poll.getLanguageId());
                 User modUser=APILocator.getUserAPI().loadUserById(poll.getModUser());                
                 Map<String,String> mm=new HashMap<String,String>();
                 mm.put("inode", poll.getInode());
@@ -103,6 +110,10 @@ public class PollsAjaxAction extends AjaxAction {
                 mm.put("title", poll.getTitle());
                 mm.put("languageId", String.valueOf(poll.getLanguageId()));
                 mm.put("question", (String)poll.getMap().get("question"));
+                if(Boolean.parseBoolean((String)poll.getMap().get("expired")))
+                	mm.put("flag", "/html/images/languages/"+lang.getLanguageCode()+"_"+lang.getCountryCode()+"_gray.gif");
+                else
+                	mm.put("flag", "/html/images/languages/"+lang.getLanguageCode()+"_"+lang.getCountryCode()+".gif");
                 mm.put("date", df.format((Date)poll.getMap().get("expiration_date")));
                 mm.put("expired", (String)poll.getMap().get("expired"));
                 mm.put("user", modUser.getFullName()+"<"+modUser.getEmailAddress()+">");
@@ -122,9 +133,11 @@ public class PollsAjaxAction extends AjaxAction {
     }
 
 	public void addPoll(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		
+		Map<String,String> pmap=getURIParams();
 		try {        	
-			String language = (String) request.getSession().getAttribute(com.dotmarketing.util.WebKeys.HTMLPAGE_LANGUAGE);
+			String language = pmap.get("el");
+			if(null==language)
+				language = (String) request.getSession().getAttribute(com.dotmarketing.util.WebKeys.HTMLPAGE_LANGUAGE);
 			User user = WebAPILocator.getUserWebAPI().getLoggedInUser(request);
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd 'T'HH:mm:ss");
 			String expireDate = request.getParameter("pollExpireDate");
@@ -132,10 +145,11 @@ public class PollsAjaxAction extends AjaxAction {
 			Date expirationDate =  sdf.parse(expireDate + " " + expireTime);
 			GregorianCalendar gc = new GregorianCalendar();
 			if(expirationDate.after(gc.getTime())){
+				Structure pollStructure = StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME);
 				Contentlet poll = new Contentlet();
 				List<Category> categories = APILocator.getCategoryAPI().findTopLevelCategories( APILocator.getUserAPI().getSystemUser(), false );
 				List<Permission> structurePermissions = APILocator.getPermissionAPI().getPermissions(StructureCache.getStructureByVelocityVarName(CHOICE_STRUCTURE_NAME));				
-				poll.setStructureInode(StructureCache.getStructureByVelocityVarName(POLL_STRUCTURE_NAME).getInode());
+				poll.setStructureInode(pollStructure.getInode());
 				poll.setStringProperty("title", request.getParameter("pollTitle"));
 				poll.setStringProperty("question", request.getParameter("pollQuestion"));
 				poll.setDateProperty("expiration_date",expirationDate);
@@ -144,31 +158,38 @@ public class PollsAjaxAction extends AjaxAction {
 				poll.setLanguageId(Long.parseLong(language));
 				poll.setModUser(user.getUserId());
 				poll.setModDate(new GregorianCalendar().getTime());				
-				poll.setStringProperty("pollpath", request.getParameter("pollpath"));
-				if(UtilMethods.isSet(request.getParameter("hostId")))
-					poll.setHost(request.getParameter("hostId"));
-				else if(UtilMethods.isSet(request.getParameter("folderInode")))
-					poll.setFolder(request.getParameter("folderInode"));
+//				if(UtilMethods.isSet(request.getParameter("hostId")))
+//					poll.setHost(request.getParameter("hostId"));
+//				else if(UtilMethods.isSet(request.getParameter("folderInode")))
+				if(UtilMethods.isSet(pollStructure.getFolder())){	
+					poll.setFolder(pollStructure.getFolder());
+					poll.setStringProperty("pollpath", pollStructure.getFolder());
+				}
 				
 				//add choices
 				String _choices = request.getParameter("pollChoice");
 				String[] choices = _choices.split("[|]");
 				List<Contentlet> contentRelationships = new ArrayList<Contentlet>();
 				List<Contentlet> contentSavedRelationships = new ArrayList<Contentlet>();
+				Structure choiseStructure = StructureCache.getStructureByVelocityVarName(CHOICE_STRUCTURE_NAME);
 				for(String c:choices){
 					Contentlet choice = new Contentlet();
-					choice.setStructureInode(StructureCache.getStructureByVelocityVarName(CHOICE_STRUCTURE_NAME).getInode());
+					choice.setStructureInode(choiseStructure.getInode());
 					choice.setStringProperty("id", UUID.randomUUID().toString());
 					choice.setStringProperty("text", c);
 					choice.setHost(WebAPILocator.getHostWebAPI().getCurrentHost(request).getIdentifier());
 					choice.setLanguageId(Long.parseLong(language));
 					choice.setModUser(user.getUserId());
 					choice.setModDate(new GregorianCalendar().getTime());	
-					choice.setStringProperty("choicepath", request.getParameter("pollpath"));	
-					if(UtilMethods.isSet(request.getParameter("hostId")))
-						choice.setHost(request.getParameter("hostId"));
-					else if(UtilMethods.isSet(request.getParameter("folderInode")))
-						choice.setFolder(request.getParameter("folderInode"));
+//					choice.setStringProperty("choicepath", request.getParameter("pollpath"));	
+//					if(UtilMethods.isSet(request.getParameter("hostId")))
+//						choice.setHost(request.getParameter("hostId"));
+//					else if(UtilMethods.isSet(request.getParameter("folderInode")))
+//						choice.setFolder(request.getParameter("folderInode"));
+					if(UtilMethods.isSet(choiseStructure.getFolder())){
+						choice.setFolder(choiseStructure.getFolder());
+						choice.setStringProperty("choicepath", choiseStructure.getFolder());
+					}
 					// add relationship
 					contentRelationships.add(choice);
 				}

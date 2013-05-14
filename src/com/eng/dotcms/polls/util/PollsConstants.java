@@ -38,7 +38,7 @@ public class PollsConstants {
 	public static final String PROP_POLL_STATUS_BUSY						=	"quartz.csv.status.busy";
 	public static final String PROP_POLL_STATUS_FREE						=	"quartz.csv.status.free";
 	public static final String PROP_REMOTE_ENABLED							=	"plugin.remote.enabled";
-	
+	public static final String PROP_FOLDER_PATH								=	"plugin.folder.path";
 	
 	
 	// scheduled jobs

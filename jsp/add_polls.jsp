@@ -24,9 +24,11 @@
 <%@ include file="/html/portlet/ext/contentlet/publishing/init.jsp" %>
 <%@ page import="com.liferay.portal.language.LanguageUtil"%>
 
+<%
+	String el = request.getParameter("el");
+%>
 <script type="text/javascript">
-	require(["dojo/parser", "dijit/form/SimpleTextarea"]);
-	dojo.require("dotcms.dijit.form.HostFolderFilteringSelect");
+	require(["dojo/parser", "dijit/form/SimpleTextarea"]);	
 	
 	function cleanFields() {
 		dojo.forEach(dijit.byId('formSavePoll').getDescendants(), function(formWidget) {
@@ -49,7 +51,7 @@
 		
 		if (form.validate()) {
 			var xhrArgs = {
-				url: "/DotAjaxDirector/com.eng.dotcms.polls.ajax.PollsAjaxAction/cmd/addPoll",
+				url: "/DotAjaxDirector/com.eng.dotcms.polls.ajax.PollsAjaxAction/cmd/addPoll/el/<%=el%>",
 				form: dojo.byId("formSavePoll"),
 				handleAs: "text",
 				load: function(data){
@@ -91,25 +93,6 @@
 		}else{			
 			dijit.byId("save").setAttribute('disabled',true);	
 		}
-	}
-	
-	function updateHostFolderValues(field){
-	  if(!isInodeSet(dijit.byId('HostSelector').attr('value'))){
-		 dojo.byId(field).value = "";
-		 dojo.byId('hostId').value = "";
-		 dojo.byId('folderInode').value = "";
-	  }else{
-		 var data = dijit.byId('HostSelector').attr('selectedItem');
-		 if(data["type"]== "host"){
-			dojo.byId(field).value =  dijit.byId('HostSelector').attr('value');
-			dojo.byId('hostId').value =  dijit.byId('HostSelector').attr('value');
-			dojo.byId('folderInode').value = "";
-		 }else if(data["type"]== "folder"){
-			dojo.byId(field).value =  dijit.byId('HostSelector').attr('value');
-			dojo.byId('folderInode').value =  dijit.byId('HostSelector').attr('value');
-			dojo.byId('hostId').value = "";
-		}
-	  }
 	}
 	
 </script>
@@ -162,22 +145,7 @@
 					  data-dojo-type="dijit.form.TimeTextBox"					  
 					  required="true" />
 				</td>		
-			</tr>	
-			
-			<tr>
-				<td align="right">
-					<%= LanguageUtil.get(pageContext, "Path") %>:
-				</td>
-				<td>						          	
-					<div id="HostSelector" dojoType="dotcms.dijit.form.HostFolderFilteringSelect" onChange="updateHostFolderValues('pollpath');"
-			            value=""></div>
-		                
-					<input type="hidden" name="path" id="pollpath" value=""/>
-			     	<input type="hidden" name="hostId" id="hostId" value=""/>
-			     	<input type="hidden" name="folderInode" id="folderInode" value=""/>
-				</td>	
-			</tr>	
-													
+			</tr>														
 			<tr>
 				<td align="right" width="40%">
 					<%= LanguageUtil.get(pageContext, "choice-text") %>:
